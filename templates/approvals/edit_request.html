@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <h3 class="mb-4">Edit Requirements for Request #{{ req.id }}</h3>
+        
+        <div class="card card-custom p-4 mb-4 bg-light">
+            <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Function Details (Read Only)</h5>
+            <div class="row">
+                <div class="col-md-6 mb-2"><strong>Function Name:</strong> {{ req.function_name }}</div>
+                <div class="col-md-6 mb-2"><strong>Type:</strong> {{ req.function_type }}</div>
+                <div class="col-md-6 mb-2"><strong>Start Date:</strong> {{ req.start_date }}</div>
+                <div class="col-md-6 mb-2"><strong>Venue:</strong> {{ req.venue.hall_name|default:"N/A" }}</div>
+            </div>
+        </div>
+        
+        <div class="card card-custom p-4">
+            <form method="post" action="{% url 'edit_request' req.id %}">
+                {% csrf_token %}
+                
+                <!-- Guest House -->
+                <div class="mb-4 border-bottom pb-4">
+                    <h5 class="mb-3 text-primary"><i class="fas fa-bed me-2"></i>Guest House Requirement</h5>
+                    <div class="form-check mb-3 form-switch">
+                        <input class="form-check-input" type="checkbox" id="guestHouseRequired" name="guest_house_required" onchange="toggleSection('guestHouseDetails', this.checked)" {% if req.guest_house.required %}checked{% endif %}>
+                        <label class="form-check-label" for="guestHouseRequired">Guest House Required?</label>
+                    </div>
+                    <div id="guestHouseDetails" style="display: {% if req.guest_house.required %}block{% else %}none{% endif %};" class="p-3 bg-light rounded border">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Number of Persons</label>
+                                <input type="number" class="form-control" name="gh_persons" min="1" value="{{ req.guest_house.number_of_persons|default:'' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">From Date</label>
+                                <input type="date" class="form-control" name="gh_from_date" value="{{ req.guest_house.from_date|date:'Y-m-d'|default:'' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">To Date</label>
+                                <input type="date" class="form-control" name="gh_to_date" value="{{ req.guest_house.to_date|date:'Y-m-d'|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Refreshments -->
+                <div class="mb-4 border-bottom pb-4">
+                    <h5 class="mb-3 text-primary"><i class="fas fa-coffee me-2"></i>Refreshment / Lunch Requirement</h5>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Refreshment Items</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="tea_required" {% if req.refreshment.tea_required %}checked{% endif %}>
+                                <label class="form-check-label">Tea</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="coffee_required" {% if req.refreshment.coffee_required %}checked{% endif %}>
+                                <label class="form-check-label">Coffee</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="snacks_required" {% if req.refreshment.snacks_required %}checked{% endif %}>
+                                <label class="form-check-label">Snacks</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Required Time</label>
+                            <input type="time" class="form-control" name="ref_required_time" value="{{ req.refreshment.required_time|time:'H:i'|default:'' }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Payment Through</label>
+                            <select name="payment_through" class="form-select">
+                                <option value="">Select...</option>
+                                <option value="ASSOCIATION" {% if req.refreshment.payment_through == 'ASSOCIATION' %}selected{% endif %}>Association Account</option>
+                                <option value="INSTITUTION" {% if req.refreshment.payment_through == 'INSTITUTION' %}selected{% endif %}>Institution Account</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-3 mb-2"><label class="fw-bold">Exact Numbers</label></div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Tiffin</label>
+                            <input type="number" class="form-control" name="tiffin_count" value="{{ req.refreshment.tiffin_count|default:0 }}" min="0">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Normal Lunch</label>
+                            <input type="number" class="form-control" name="normal_lunch_count" value="{{ req.refreshment.normal_lunch_count|default:0 }}" min="0">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Special Lunch (Veg)</label>
+                            <input type="number" class="form-control" name="veg_lunch_count" value="{{ req.refreshment.veg_lunch_count|default:0 }}" min="0">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Special Lunch (Non Veg)</label>
+                            <input type="number" class="form-control" name="non_veg_lunch_count" value="{{ req.refreshment.non_veg_lunch_count|default:0 }}" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transport -->
+                <div class="mb-4 border-bottom pb-4">
+                    <h5 class="mb-3 text-primary"><i class="fas fa-bus me-2"></i>Transport Requirement</h5>
+                    <div class="form-check mb-3 form-switch">
+                        <input class="form-check-input" type="checkbox" id="transportRequired" name="transport_required" onchange="toggleSection('transportDetails', this.checked)" {% if req.transport.required %}checked{% endif %}>
+                        <label class="form-check-label" for="transportRequired">Transport Required?</label>
+                    </div>
+                    <div id="transportDetails" style="display: {% if req.transport.required %}block{% else %}none{% endif %};" class="p-3 bg-light rounded border">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Requirement Date</label>
+                                <input type="date" class="form-control" name="tr_date" value="{{ req.transport.date|date:'Y-m-d'|default:'' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" class="form-control" name="tr_location" value="{{ req.transport.pickup_location|default:'' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Pickup Time at NGPIT</label>
+                                <input type="time" class="form-control" name="tr_pickup_time" value="{{ req.transport.pickup_time|time:'H:i'|default:'' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Drop Time</label>
+                                <input type="time" class="form-control" name="tr_drop_time" value="{{ req.transport.drop_time|time:'H:i'|default:'' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Person to pick up Name</label>
+                                <input type="text" class="form-control" name="tr_pickup_person" value="{{ req.transport.pickup_person_name|default:'' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Person Contact No.</label>
+                                <input type="text" class="form-control" name="tr_pickup_contact" value="{{ req.transport.pickup_person_contact|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Power / Camera -->
+                <div class="mb-4 border-bottom pb-4">
+                    <h5 class="mb-3 text-primary"><i class="fas fa-plug me-2"></i>Power / System / Camera Requirement</h5>
+                    <div class="row p-3 bg-light rounded border">
+                        <div class="col-md-6 mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="mic_required" id="micReq" onchange="toggleSection('micDetails', this.checked)" {% if req.power_camera.mic_required %}checked{% endif %}>
+                            <label class="form-check-label" for="micReq">Mic Arrangement Required?</label>
+                        </div>
+                        <div class="col-md-6 mb-3" id="micDetails" style="display: {% if req.power_camera.mic_required %}block{% else %}none{% endif %};">
+                            <label class="form-label">Type & No of Mic</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="mic_type" placeholder="Type (e.g. Cordless)" value="{{ req.power_camera.mic_type|default:'' }}">
+                                <input type="number" class="form-control" name="number_of_mics" min="0" value="{{ req.power_camera.number_of_mics|default:0 }}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="ac_required" {% if req.power_camera.ac_required %}checked{% endif %}>
+                            <label class="form-check-label">A/C Arrangement</label>
+                        </div>
+                        <div class="col-md-4 mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="projector_required" {% if req.power_camera.projector_required %}checked{% endif %}>
+                            <label class="form-check-label">LCD Projector</label>
+                        </div>
+                        <div class="col-md-4 mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="laptop_required" {% if req.power_camera.laptop_required %}checked{% endif %}>
+                            <label class="form-check-label">Laptop</label>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3 form-check form-switch mt-3">
+                            <input class="form-check-input" type="checkbox" name="photographer_required" id="photoReq" onchange="toggleSection('photoDetails', this.checked)" {% if req.power_camera.photographer_required %}checked{% endif %}>
+                            <label class="form-check-label" for="photoReq">Photograph Facility Required?</label>
+                        </div>
+                        <div class="col-md-6 mb-3 mt-3" id="photoDetails" style="display: {% if req.power_camera.photographer_required %}block{% else %}none{% endif %};">
+                            <label class="form-label">Type of Photographer</label>
+                            <select class="form-select" name="photographer_type">
+                                <option value="">Select...</option>
+                                <option value="LAB_TECHNICIAN" {% if req.power_camera.photographer_type == 'LAB_TECHNICIAN' %}selected{% endif %}>Lab Technician</option>
+                                <option value="OFFICIAL" {% if req.power_camera.photographer_type == 'OFFICIAL' %}selected{% endif %}>Official Photographer</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memento -->
+                <div class="mb-4">
+                    <h5 class="mb-3 text-primary"><i class="fas fa-gift me-2"></i>Memento / Seating / Reception</h5>
+                    <div class="row p-3 bg-light rounded border">
+                        <div class="col-md-12 mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="memento_required" id="mementoReq" onchange="toggleSection('mementoDetails', this.checked)" {% if req.memento.required %}checked{% endif %}>
+                            <label class="form-check-label" for="mementoReq">Memento / Honorarium for Chief Guest?</label>
+                        </div>
+                        <div class="col-md-12 mb-3" id="mementoDetails" style="display: {% if req.memento.required %}flex{% else %}none{% endif %};">
+                            <div class="row w-100">
+                                <div class="col-md-6">
+                                    <label class="form-label">Worth of (Rs)</label>
+                                    <input type="text" class="form-control" name="honorarium_worth" value="{{ req.memento.honorarium_worth|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" name="memento_quantity" min="0" value="{{ req.memento.quantity|default:0 }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mt-3 mb-2"><label class="fw-bold">No. of Seating Arrangements</label></div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">a) Dias</label>
+                            <input type="number" class="form-control" name="dias_seats" min="0" value="{{ req.memento.dias_seats|default:0 }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">b) Audience</label>
+                            <input type="number" class="form-control" name="audience_seats" min="0" value="{{ req.memento.audience_seats|default:0 }}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">No. of Table Cloths</label>
+                            <input type="number" class="form-control" name="table_cloths" min="0" value="{{ req.memento.table_cloths|default:0 }}">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Reception Item Requirements</label>
+                            <textarea class="form-control" name="reception_items" rows="2">{{ req.memento.reception_items|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 border-top pt-4">
+                    <a href="{% url 'request_detail' req.id %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i> Cancel</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i> Save Requirements</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleSection(id, isChecked) {
+        let el = document.getElementById(id);
+        if(id === 'mementoDetails') {
+            el.style.display = isChecked ? 'flex' : 'none';
+        } else {
+            el.style.display = isChecked ? 'block' : 'none';
+        }
+    }
+</script>
+{% endblock %}

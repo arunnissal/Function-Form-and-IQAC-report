@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card card-custom p-4">
+    <h3 class="mb-4 text-primary"><i class="fas fa-file-alt me-2"></i>IQAC Reports Dashboard</h3>
+    
+    <p class="text-muted">This dashboard will show all generated IQAC reports for completed events.</p>
+    
+    <div class="alert alert-info">
+        Currently under construction. You can view individual event reports from the <a href="{% url 'my_requests' %}">Requests View</a>.
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Requirement & Approval Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            height: 100vh;
+            background-color: #212529;
+            color: #fff;
+            padding-top: 20px;
+            position: fixed;
+            width: 250px;
+        }
+        .sidebar a {
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 10px 20px;
+            display: block;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            color: #fff;
+            background-color: #343a40;
+            border-left: 4px solid #0d6efd;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .navbar-custom {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,.08);
+            margin-bottom: 30px;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,.05);
+            transition: transform 0.2s;
+        }
+        .card-custom:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    {% if user.is_authenticated %}
+    <div class="sidebar">
+        <h4 class="text-center mb-4 px-2" style="font-weight: 700;">Dr.NGPIT ERP</h4>
+        
+        <div class="px-3 mb-3 text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Menu</div>
+        
+        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-home me-2"></i> Dashboard
+        </a>
+        
+        {% if user.role == 'FACULTY' or user.role == 'HOD' %}
+        <a href="{% url 'create_request' %}" class="{% if request.resolver_match.url_name == 'create_request' %}active{% endif %}">
+            <i class="fas fa-plus-circle me-2"></i> New Request
+        </a>
+        {% endif %}
+        
+        {% if user.role == 'FACULTY' or user.role == 'HOD' %}
+        <a href="{% url 'my_requests' %}" class="{% if request.resolver_match.url_name == 'my_requests' %}active{% endif %}">
+            <i class="fas fa-list me-2"></i> My Requests
+        </a>
+        {% endif %}
+        
+        <a href="{% url 'hall_availability' %}" class="{% if request.resolver_match.url_name == 'hall_availability' %}active{% endif %}">
+            <i class="fas fa-calendar-alt me-2"></i> Event Calendar
+        </a>
+
+        {% if user.role == 'HOD' or user.role == 'MANAGEMENT' or user.role == 'PRINCIPAL' %}
+        <a href="{% url 'approval_queue' %}" class="{% if request.resolver_match.url_name == 'approval_queue' %}active{% endif %}">
+            <i class="fas fa-check-square me-2"></i> Approvals
+        </a>
+        {% endif %}
+
+        {% if user.role == 'ADMIN' or user.role == 'PRINCIPAL' or user.role == 'MANAGEMENT' %}
+        <a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+            <i class="fas fa-chart-bar me-2"></i> IQAC Reports
+        </a>
+        {% endif %}
+        
+        {% if user.role == 'MANAGEMENT' or user.role == 'ADMIN' %}
+        <a href="{% url 'manage_halls' %}" class="{% if request.resolver_match.url_name == 'manage_halls' %}active{% endif %}">
+            <i class="fas fa-building me-2"></i> Seminar Halls
+        </a>
+        
+        <a href="{% url 'manage_departments' %}" class="{% if request.resolver_match.url_name == 'manage_departments' %}active{% endif %}">
+            <i class="fas fa-sitemap me-2"></i> Departments
+        </a>
+        
+        <a href="{% url 'manage_users' %}" class="{% if request.resolver_match.url_name == 'manage_users' %}active{% endif %}">
+            <i class="fas fa-users me-2"></i> Manage Staff
+        </a>
+        {% endif %}
+        
+        <div style="position: absolute; bottom: 20px; width: 100%; padding-left: 20px;">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link text-decoration-none p-0" style="color: #adb5bd;">
+                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="{% if user.is_authenticated %}main-content{% endif %}">
+        {% if user.is_authenticated %}
+        <nav class="navbar navbar-expand-lg navbar-light navbar-custom rounded px-4 py-3">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1">Function Requirement & Approval System</span>
+                <div class="d-flex align-items-center">
+                    <span class="me-3">Welcome, <strong>{{ user.get_full_name|default:user.username }}</strong> ({{ user.get_role_display }})</span>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

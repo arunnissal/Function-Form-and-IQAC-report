@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>My Requests</h2>
+<p class="text-muted">A list of all function requirements submitted by you.</p>
+
+<div class="card card-custom">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Function Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>#{{ req.id }}</td>
+                    <td>{{ req.function_name }}</td>
+                    <td>{{ req.start_date }}{% if req.end_date %} to {{ req.end_date }}{% endif %}</td>
+                    <td>
+                        <span class="badge 
+                            {% if req.status == 'APPROVED' %}bg-success
+                            {% elif req.status == 'REJECTED' %}bg-danger
+                            {% else %}bg-warning{% endif %}">
+                            {{ req.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-sm btn-outline-primary mb-1">View</a>
+                        {% if req.status == 'APPROVED' %}
+                            <a href="{% url 'fill_iqac_report' req.id %}" class="btn btn-sm btn-success mb-1">Fill IQAC</a>
+                            {% if req.has_report %}
+                                <a href="{% url 'generate_iqac_pdf' req.id %}" class="btn btn-sm btn-outline-danger mb-1"><i class="fas fa-file-pdf"></i> PDF</a>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

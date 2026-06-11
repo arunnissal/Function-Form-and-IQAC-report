@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <h3 class="mb-4">Generate IQAC Report: {{ req.function_name }}</h3>
+        
+        <div class="card card-custom p-4">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <h5 class="text-primary mb-3">Event Details</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Dept. Ref. No.</label>
+                        <input type="text" class="form-control" name="dept_ref_no" value="{{ report.dept_ref_no }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Funding Agency (Int / Ext)</label>
+                        <input type="text" class="form-control" name="funding_agency" value="{{ report.funding_agency }}">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Objective of the event</label>
+                        <textarea class="form-control" name="objective" rows="2">{{ report.objective }}</textarea>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Alumni Contribution (if any)</label>
+                        <input type="text" class="form-control" name="alumni_contribution" value="{{ report.alumni_contribution|default:'NA' }}">
+                    </div>
+                </div>
+
+                <h5 class="text-primary mb-3">Budget & Participants</h5>
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Proposed Budget (INR)</label>
+                        <input type="text" class="form-control" name="budget_proposed" value="{{ report.budget_proposed|default:'-' }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Actual Budget (INR)</label>
+                        <input type="text" class="form-control" name="budget_actual" value="{{ report.budget_actual|default:'-' }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Internal Participants</label>
+                        <input type="text" class="form-control" name="participants_internal" value="{{ report.participants_internal }}" placeholder="e.g. 51 (Mech Students)">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">External Participants</label>
+                        <input type="text" class="form-control" name="participants_external" value="{{ report.participants_external }}" placeholder="e.g. 04">
+                    </div>
+                </div>
+
+                <h5 class="text-primary mb-3">Guest Details</h5>
+                <div id="guests-container">
+                    {% for guest in report.guests.all %}
+                    <div class="row mb-3 guest-row border p-3 rounded bg-light">
+                        <div class="col-md-4 mb-2"><label>Name</label><input type="text" class="form-control" name="guest_name_{{ forloop.counter }}" value="{{ guest.name }}"></div>
+                        <div class="col-md-4 mb-2"><label>Designation</label><input type="text" class="form-control" name="guest_designation_{{ forloop.counter }}" value="{{ guest.designation }}"></div>
+                        <div class="col-md-4 mb-2"><label>Topic</label><input type="text" class="form-control" name="guest_topic_{{ forloop.counter }}" value="{{ guest.topic }}"></div>
+                        <div class="col-md-6 mb-2"><label>Organization Address</label><textarea class="form-control" name="guest_org_{{ forloop.counter }}" rows="2">{{ guest.organization_address }}</textarea></div>
+                        <div class="col-md-3 mb-2"><label>Mobile/Landline</label><input type="text" class="form-control" name="guest_mobile_{{ forloop.counter }}" value="{{ guest.mobile }}"></div>
+                        <div class="col-md-3 mb-2"><label>Email Id</label><input type="email" class="form-control" name="guest_email_{{ forloop.counter }}" value="{{ guest.email }}"></div>
+                    </div>
+                    {% empty %}
+                    <div class="row mb-3 guest-row border p-3 rounded bg-light">
+                        <div class="col-md-4 mb-2"><label>Name</label><input type="text" class="form-control" name="guest_name_1"></div>
+                        <div class="col-md-4 mb-2"><label>Designation</label><input type="text" class="form-control" name="guest_designation_1"></div>
+                        <div class="col-md-4 mb-2"><label>Topic</label><input type="text" class="form-control" name="guest_topic_1"></div>
+                        <div class="col-md-6 mb-2"><label>Organization Address</label><textarea class="form-control" name="guest_org_1" rows="2"></textarea></div>
+                        <div class="col-md-3 mb-2"><label>Mobile/Landline</label><input type="text" class="form-control" name="guest_mobile_1"></div>
+                        <div class="col-md-3 mb-2"><label>Email Id</label><input type="email" class="form-control" name="guest_email_1"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary mb-4" onclick="addGuest()">+ Add Another Guest</button>
+
+                <h5 class="text-primary mb-3">Outcome & Photos</h5>
+                <div class="row mb-4">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Outcome of the event</label>
+                        <textarea class="form-control" name="outcome" rows="3">{{ report.outcome }}</textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Picture 1 (Required for PDF)</label>
+                        <input type="file" class="form-control" name="photo_1" accept="image/*" {% if not report.photo_1 %}required{% endif %}>
+                        {% if report.photo_1 %}<small class="text-success">Photo 1 already uploaded. Select to replace.</small>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Picture 2 (Required for PDF)</label>
+                        <input type="file" class="form-control" name="photo_2" accept="image/*" {% if not report.photo_2 %}required{% endif %}>
+                        {% if report.photo_2 %}<small class="text-success">Photo 2 already uploaded. Select to replace.</small>{% endif %}
+                    </div>
+                </div>
+
+                <h5 class="text-primary mb-3">Enclosures (Image Uploads)</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Brochure Image</label>
+                        <input type="file" class="form-control" name="brochure" accept="image/*">
+                        {% if report.brochure %}<small class="text-success">Uploaded</small>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Certificate Image</label>
+                        <input type="file" class="form-control" name="certificate" accept="image/*">
+                        {% if report.certificate %}<small class="text-success">Uploaded</small>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Attendance Sheet Image</label>
+                        <input type="file" class="form-control" name="attendance_sheet" accept="image/*">
+                        {% if report.attendance_sheet %}<small class="text-success">Uploaded</small>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Feedback Form Image</label>
+                        <input type="file" class="form-control" name="feedback_report" accept="image/*">
+                        {% if report.feedback_report %}<small class="text-success">Uploaded</small>{% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'my_requests' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Save & Complete Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let guestCount = {{ report.guests.count|default:"1" }};
+    function addGuest() {
+        guestCount++;
+        const container = document.getElementById('guests-container');
+        const row = document.createElement('div');
+        row.className = 'row mb-3 guest-row border p-3 rounded bg-light mt-2';
+        row.innerHTML = `
+            <div class="col-md-4 mb-2"><label>Name</label><input type="text" class="form-control" name="guest_name_${guestCount}"></div>
+            <div class="col-md-4 mb-2"><label>Designation</label><input type="text" class="form-control" name="guest_designation_${guestCount}"></div>
+            <div class="col-md-4 mb-2"><label>Topic</label><input type="text" class="form-control" name="guest_topic_${guestCount}"></div>
+            <div class="col-md-6 mb-2"><label>Organization Address</label><textarea class="form-control" name="guest_org_${guestCount}" rows="2"></textarea></div>
+            <div class="col-md-3 mb-2"><label>Mobile/Landline</label><input type="text" class="form-control" name="guest_mobile_${guestCount}"></div>
+            <div class="col-md-3 mb-2"><label>Email Id</label><input type="email" class="form-control" name="guest_email_${guestCount}"></div>
+        `;
+        container.appendChild(row);
+    }
+</script>
+{% endblock %}
