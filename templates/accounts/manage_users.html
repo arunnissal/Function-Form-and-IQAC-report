@@ -2,22 +2,42 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-12 d-flex justify-content-between align-items-center">
+    <div class="col-md-12 d-flex justify-content-between align-items-center flex-wrap">
         <div>
             <h2><i class="fas fa-users text-primary me-2"></i>Manage Staff</h2>
             <p class="text-muted">View and manage staff accounts.</p>
         </div>
         {% if user.role == 'MANAGEMENT' or user.role == 'ADMIN' %}
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
-            <i class="fas fa-user-plus me-2"></i>Add Staff
-        </button>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#bulkAddModal">
+                <i class="fas fa-file-excel me-2"></i>Bulk Add
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                <i class="fas fa-user-plus me-2"></i>Add Staff
+            </button>
+        </div>
         {% endif %}
     </div>
 </div>
 
 <div class="card card-custom">
     <div class="card-body">
-        <table class="table table-hover align-middle">
+        {% if user.role in 'MANAGEMENT ADMIN' %}
+        <form method="get" class="mb-3 d-flex align-items-center flex-wrap">
+            <label class="me-2 fw-bold text-muted small"><i class="fas fa-filter me-1"></i>Filter by Department:</label>
+            <select name="department" class="form-select form-select-sm w-auto d-inline-block me-2" onchange="this.form.submit()">
+                <option value="">All Departments</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}" {% if selected_dept_id == d.id|stringformat:"s" %}selected{% endif %}>{{ d.department_code }} - {{ d.department_name }}</option>
+                {% endfor %}
+            </select>
+            {% if selected_dept_id %}
+            <a href="{% url 'manage_users' %}" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
+            {% endif %}
+        </form>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
             <thead class="table-light">
                 <tr>
                     <th>Mail ID</th>
@@ -61,6 +81,14 @@
                             <input type="hidden" name="user_id" value="{{ u.id }}">
                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                 <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        <form method="post" class="d-inline" onsubmit="return confirm('Reset this user\'s password to default?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reset_password">
+                            <input type="hidden" name="user_id" value="{{ u.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-warning ms-1" title="Reset Password">
+                                <i class="fas fa-key"></i>
                             </button>
                         </form>
                         
@@ -118,6 +146,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 
@@ -132,6 +161,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted" style="font-size: 0.9rem;">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" required placeholder="John Doe">
+                    </div>
                     <div class="mb-3">
                         <label class="form-label text-muted" style="font-size: 0.9rem;">Staff Mail-id <small>e.g. abc@drngpit.ac.in</small></label>
                         <div class="input-group">
@@ -169,4 +202,39 @@
         </div>
     </div>
 </div>
+
+<!-- Bulk Add Staff Modal -->
+<div class="modal fade" id="bulkAddModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-excel text-success me-2"></i>Bulk Add Staff</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="bulk_add">
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 small">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Please upload an Excel file. Make sure it follows the template format.
+                        <div class="mt-2 text-center">
+                            <a href="{% url 'download_staff_template' %}" class="btn btn-sm btn-outline-info bg-white text-info"><i class="fas fa-download me-1"></i> Download Template</a>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Excel File (.xlsx)</label>
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx, .xls" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-upload me-2"></i>Upload & Process</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

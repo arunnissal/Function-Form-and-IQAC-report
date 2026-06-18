@@ -99,6 +99,15 @@ def generate_iqac_pdf(request, req_id):
     report = get_object_or_404(EventReport, function_request_id=req_id)
     func = report.function_request
     
+    user_role = request.user.role
+    if user_role not in ['FACULTY', 'HOD', 'MANAGEMENT', 'PRINCIPAL', 'ADMIN']:
+        messages.error(request, "You do not have permission to download this report.")
+        return redirect('dashboard')
+        
+    if user_role == 'HOD' and func.department != request.user.hod_profile.department:
+        messages.error(request, "You can only download reports for your department.")
+        return redirect('dashboard')
+    
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="IQAC_Report_{func.id}.pdf"'
     
@@ -119,11 +128,11 @@ def generate_iqac_pdf(request, req_id):
     # Basic Data Table
     data = [
         ['Dept. Ref. No.: ' + report.dept_ref_no, 'Date: ' + str(func.start_date)],
-        ['Event Name: ' + func.function_type, ''],
-        ['Event Title: ' + func.function_name, ''],
-        ['Objective of the event: ' + report.objective, ''],
-        ['Funding Agency (Int / Ext): ' + report.funding_agency, ''],
-        ['Alumni Contribution (if any): ' + report.alumni_contribution, ''],
+        [Paragraph('Event Name: ' + func.function_type, normal_style), ''],
+        [Paragraph('Event Title: ' + func.function_name, normal_style), ''],
+        [Paragraph('Objective of the event: ' + report.objective, normal_style), ''],
+        [Paragraph('Funding Agency (Int / Ext): ' + report.funding_agency, normal_style), ''],
+        [Paragraph('Alumni Contribution (if any): ' + report.alumni_contribution, normal_style), ''],
         ['Venue: ' + (func.venue.hall_name if func.venue else 'N/A'), 'Date of event: ' + str(func.start_date)]
     ]
     
@@ -152,10 +161,10 @@ def generate_iqac_pdf(request, req_id):
         for idx, guest in enumerate(guests, 1):
             guest_data = [
                 [f"Guest {idx}", '', '', ''],
-                ["Name", guest.name, "Designation", guest.designation],
-                ["Organization", guest.organization_address, "Mobile / Landline", guest.mobile],
-                ["", "", "Email Id", guest.email],
-                ["Topic:", guest.topic, '', '']
+                ["Name", Paragraph(guest.name, normal_style), "Designation", Paragraph(guest.designation, normal_style)],
+                ["Organization", Paragraph(guest.organization_address, normal_style), "Mobile / Landline", guest.mobile],
+                ["", "", "Email Id", Paragraph(guest.email, normal_style)],
+                ["Topic:", Paragraph(guest.topic, normal_style), '', '']
             ]
             gt = Table(guest_data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
             gt.setStyle(TableStyle([

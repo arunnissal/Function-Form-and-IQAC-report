@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, update_session_auth_hash
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
@@ -8,10 +8,6 @@ import random
 import string
 
 User = get_user_model()
-
-# Store OTPs in session or simple memory dict for prototype
-# In production, use Cache or DB
-OTP_STORE = {}
 
 def custom_login(request):
     if request.user.is_authenticated:
@@ -50,53 +46,7 @@ def custom_login(request):
             
     return render(request, 'registration/login.html')
 
-def send_otp(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        if not email or not email.endswith('@drngpit.ac.in'):
-            return JsonResponse({'status': 'error', 'message': 'Invalid Dr.NGPIT email'})
-            
-        try:
-            user = User.objects.get(username=email)
-        except User.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Email not found in system'})
-            
-        otp = ''.join(random.choices(string.digits, k=5))
-        OTP_STORE[email] = otp
-        print(f"\n======================================")
-        print(f"MOCK EMAIL SENT TO: {email}")
-        print(f"YOUR OTP CODE IS: {otp}")
-        print(f"======================================\n")
-        
-        return JsonResponse({'status': 'success', 'message': 'OTP sent successfully. Check server console.'})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
-def change_password_first_time(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        otp = request.POST.get('otp')
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
-        
-        if new_password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-            return redirect('login')
-            
-        if email not in OTP_STORE or OTP_STORE[email] != otp:
-            messages.error(request, "Invalid or expired OTP.")
-            return redirect('login')
-            
-        try:
-            user = User.objects.get(username=email)
-            user.set_password(new_password)
-            user.save()
-            del OTP_STORE[email]
-            messages.success(request, "Password changed successfully! You can now log in.")
-        except User.DoesNotExist:
-            messages.error(request, "User not found.")
-            
-        return redirect('login')
-        
 @login_required
 def dashboard(request):
     user = request.user
@@ -116,6 +66,26 @@ def dashboard(request):
     return render(request, 'accounts/dashboard.html', context)
 
 @login_required
+def change_password(request):
+    if request.method == 'POST' and 'change_password' in request.POST:
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if not request.user.check_password(current_password):
+            messages.error(request, "Incorrect current password.")
+        elif new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+        else:
+            request.user.set_password(new_password)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            messages.success(request, "Password updated successfully!")
+            
+    next_url = request.POST.get('next', 'dashboard')
+    return redirect(next_url)
+
+@login_required
 def manage_users(request):
     if request.user.role not in ['MANAGEMENT', 'ADMIN', 'HOD']:
         return redirect('dashboard')
@@ -132,6 +102,18 @@ def manage_users(request):
     from departments.models import Department
     departments = Department.objects.all()
     
+    selected_dept_id = request.GET.get('department', '')
+    
+    if request.user.role in ['ADMIN', 'MANAGEMENT']:
+        if selected_dept_id:
+            filtered_users = []
+            for u in users:
+                if u.role == 'FACULTY' and hasattr(u, 'faculty_profile') and str(u.faculty_profile.department_id) == selected_dept_id:
+                    filtered_users.append(u)
+                elif u.role == 'HOD' and hasattr(u, 'hod_profile') and str(u.hod_profile.department_id) == selected_dept_id:
+                    filtered_users.append(u)
+            users = filtered_users
+    
     if request.method == 'POST' and request.user.role == 'MANAGEMENT':
         action = request.POST.get('action')
         
@@ -143,6 +125,19 @@ def manage_users(request):
             else:
                 user_to_del.delete()
                 messages.success(request, "User deleted successfully.")
+            return redirect('manage_users')
+            
+        elif action == 'reset_password':
+            user_id = request.POST.get('user_id')
+            user_to_reset = get_object_or_404(User, id=user_id)
+            
+            if user_to_reset.is_superuser or user_to_reset.role in ['ADMIN', 'PRINCIPAL']:
+                messages.error(request, "Cannot reset password for this high-level user.")
+            else:
+                default_password = user_to_reset.email.split('@')[0]
+                user_to_reset.set_password(default_password)
+                user_to_reset.save()
+                messages.success(request, f"Password reset to '{default_password}' for {user_to_reset.email}")
             return redirect('manage_users')
             
         elif action == 'edit':
@@ -177,8 +172,84 @@ def manage_users(request):
             messages.success(request, f"User {user_to_edit.email} updated successfully.")
             return redirect('manage_users')
             
+        elif action == 'bulk_add':
+            excel_file = request.FILES.get('excel_file')
+            if not excel_file:
+                messages.error(request, "Please upload an Excel file.")
+                return redirect('manage_users')
+            
+            try:
+                import pandas as pd
+                df = pd.read_excel(excel_file)
+                
+                required_cols = ['Full Name', 'Email', 'Department Code', 'Position']
+                if not all(col in df.columns for col in required_cols):
+                    messages.error(request, f"Excel file must contain columns: {', '.join(required_cols)}")
+                    return redirect('manage_users')
+                
+                success_count = 0
+                error_count = 0
+                
+                for index, row in df.iterrows():
+                    full_name = str(row.get('Full Name', '')).strip()
+                    staff_email = str(row.get('Email', '')).strip()
+                    dept_code = str(row.get('Department Code', '')).strip()
+                    position = str(row.get('Position', '')).strip()
+                    
+                    if not staff_email or pd.isna(staff_email) or staff_email == 'nan':
+                        continue
+                    if not staff_email.endswith('@drngpit.ac.in'):
+                        error_count += 1
+                        continue
+                    if User.objects.filter(username=staff_email).exists():
+                        error_count += 1
+                        continue
+                        
+                    dept = Department.objects.filter(department_code__iexact=dept_code).first()
+                    if not dept:
+                        error_count += 1
+                        continue
+                        
+                    role_map = {'Staff': 'FACULTY', 'HOD': 'HOD'}
+                    new_role = role_map.get(position, 'FACULTY')
+                    
+                    first_name = full_name.split()[0] if full_name else ''
+                    last_name = ' '.join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else ''
+                    
+                    new_user = User.objects.create(
+                        username=staff_email, 
+                        email=staff_email, 
+                        role=new_role,
+                        first_name=first_name,
+                        last_name=last_name,
+                        is_active=True
+                    )
+                    
+                    default_password = staff_email.split('@')[0]
+                    new_user.set_password(default_password)
+                    new_user.save()
+                    
+                    if new_role == 'FACULTY':
+                        from departments.models import Faculty
+                        Faculty.objects.create(user=new_user, department=dept, designation='Staff', contact_number='')
+                    elif new_role == 'HOD':
+                        from departments.models import HOD
+                        HOD.objects.create(user=new_user, department=dept)
+                        
+                    success_count += 1
+                    
+                if success_count > 0:
+                    messages.success(request, f"Successfully bulk added {success_count} staff members.")
+                if error_count > 0:
+                    messages.warning(request, f"Skipped {error_count} rows due to duplicate emails, invalid emails, or unknown department codes.")
+                    
+            except Exception as e:
+                messages.error(request, f"Error processing Excel file: {str(e)}")
+            return redirect('manage_users')
+            
         else:
             # Add staff
+            full_name = request.POST.get('full_name')
             staff_email = request.POST.get('staff_email')
             position = request.POST.get('position')
             department_id = request.POST.get('department')
@@ -194,8 +265,20 @@ def manage_users(request):
             role_map = {'Staff': 'FACULTY', 'HOD': 'HOD'}
             new_role = role_map.get(position, 'FACULTY')
             
-            new_user = User.objects.create(username=staff_email, email=staff_email, role=new_role)
-            new_user.set_password('drngp@123')
+            first_name = full_name.split()[0] if full_name else ''
+            last_name = ' '.join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else ''
+            
+            new_user = User.objects.create(
+                username=staff_email, 
+                email=staff_email, 
+                role=new_role,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True
+            )
+            
+            default_password = staff_email.split('@')[0]
+            new_user.set_password(default_password)
             new_user.save()
             
             dept = Department.objects.get(id=department_id)
@@ -206,7 +289,31 @@ def manage_users(request):
                 from departments.models import HOD
                 HOD.objects.create(user=new_user, department=dept)
                 
-            messages.success(request, f"Staff {staff_email} added successfully. Default password is drngp@123")
+            messages.success(request, f"Staff {staff_email} added successfully. Default password is {default_password}")
             return redirect('manage_users')
         
-    return render(request, 'accounts/manage_users.html', {'users_list': users, 'departments': departments})
+    return render(request, 'accounts/manage_users.html', {'users_list': users, 'departments': departments, 'selected_dept_id': selected_dept_id})
+
+@login_required
+def download_staff_template(request):
+    import pandas as pd
+    from django.http import HttpResponse
+    from io import BytesIO
+    
+    df = pd.DataFrame({
+        'Full Name': ['John Doe', 'Jane Smith'],
+        'Email': ['johndoe@drngpit.ac.in', 'janesmith@drngpit.ac.in'],
+        'Department Code': ['CSE', 'ECE'],
+        'Position': ['Staff', 'HOD']
+    })
+    
+    with BytesIO() as b:
+        with pd.ExcelWriter(b, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Template')
+        
+        response = HttpResponse(
+            b.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="staff_bulk_add_template.xlsx"'
+        return response

@@ -15,12 +15,28 @@
     .fc-event {
         cursor: pointer;
     }
+    @media (max-width: 768px) {
+        #calendar {
+            padding: 10px;
+        }
+        .fc-toolbar {
+            flex-direction: column;
+            gap: 10px;
+        }
+        .fc-toolbar-title {
+            font-size: 1.25rem !important;
+        }
+        .fc-button {
+            padding: 0.25em 0.5em !important;
+            font-size: 0.875rem !important;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-11">
+    <div class="col-12 col-lg-10">
         <h3 class="mb-4 text-center">Seminar Hall Booking Calendar</h3>
         <p class="text-center text-muted">This calendar shows all strictly APPROVED bookings. Pending requests are not shown to prevent confusion.</p>
         

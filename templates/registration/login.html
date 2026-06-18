@@ -54,14 +54,14 @@
         .text-success-custom {
             color: #198754;
             font-size: 0.8rem;
-            text-align: center;
+            text-align: left;
             display: block;
             margin-top: 5px;
         }
         .text-danger-custom {
             color: #dc3545;
             font-size: 0.8rem;
-            text-align: center;
+            text-align: left;
             display: block;
             margin-top: 5px;
         }
@@ -113,8 +113,8 @@
             <form method="post" action="{% url 'login' %}">
                 {% csrf_token %}
                 <div class="mb-4">
-                    <label class="form-label text-center d-block">Login as</label>
-                    <select name="position" id="position" class="form-select text-center" onchange="validateForm()">
+                    <label class="form-label fw-semibold">Login as</label>
+                    <select name="position" id="position" class="form-select" onchange="validateForm()">
                         <option value="">-- Select Position --</option>
                         <option value="AO">AO</option>
                         <option value="Staff">Staff</option>
@@ -126,79 +126,21 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label text-center d-block">Mail id</label>
-                    <input type="email" name="email" id="email" class="form-control text-center" placeholder="e.g. name@drngpit.ac.in" onkeyup="validateForm()">
+                    <label class="form-label fw-semibold">Mail id</label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="e.g. name@drngpit.ac.in" onkeyup="validateForm()">
                     <span id="email-feedback" class="text-danger-custom" style="display:none;">Enter your organisational mail id</span>
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label text-center d-block">Admin/Staff password</label>
-                    <input type="password" name="password" id="password" class="form-control text-center" onkeyup="validateForm()">
+                    <label class="form-label fw-semibold">Password</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" onkeyup="validateForm()">
                     <span id="pwd-feedback" class="text-danger-custom" style="display:none;">Enter password, Must contain at least special character and one number...</span>
                 </div>
 
-                <div class="text-center mb-3">
-                    <span style="font-size: 0.9rem;">Is this your first time ?</span>
-                    <a href="#" class="btn-black" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change password</a>
-                </div>
-                <div class="text-center mb-4">
-                    <span style="font-size: 0.9rem;">Have you forgotten your password</span>
-                    <a href="#" class="btn-teal">Reset password</a>
-                </div>
-
-                <div class="text-center">
-                    <button type="submit" class="btn btn-outline-primary px-4">Login</button>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Login</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Change password for the first time</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="post" action="{% url 'change_password_first_time' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Enter mail id</label>
-                            <div class="input-group">
-                                <input type="email" name="email" id="otp_email" class="form-control" required>
-                                <button type="button" class="btn btn-outline-secondary" onclick="sendOTP()">Get OTP</button>
-                            </div>
-                            <small id="otp_msg" class="text-success d-block mt-1"></small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Position</label>
-                            <select name="position" class="form-select">
-                                <option value="AO">AO</option>
-                                <option value="Staff">Staff</option>
-                                <option value="HOD">HOD</option>
-                                <option value="Principal">Principal</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Enter OTP</label>
-                            <input type="text" name="otp" class="form-control" placeholder="Check server console for OTP" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Enter new password</label>
-                            <input type="password" name="new_password" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirm new password</label>
-                            <input type="password" name="confirm_password" class="form-control" required>
-                        </div>
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-warning">Change password</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -250,36 +192,6 @@
             }
         }
 
-        function sendOTP() {
-            const email = document.getElementById('otp_email').value;
-            const msgLabel = document.getElementById('otp_msg');
-            if(!email.endsWith('@drngpit.ac.in')) {
-                msgLabel.className = 'text-danger d-block mt-1';
-                msgLabel.innerText = 'Please enter a valid @drngpit.ac.in email.';
-                return;
-            }
-            msgLabel.className = 'text-info d-block mt-1';
-            msgLabel.innerText = 'Sending...';
-
-            fetch("{% url 'send_otp' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: 'email=' + encodeURIComponent(email)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    msgLabel.className = 'text-success d-block mt-1';
-                    msgLabel.innerText = data.message;
-                } else {
-                    msgLabel.className = 'text-danger d-block mt-1';
-                    msgLabel.innerText = data.message;
-                }
-            });
-        }
     </script>
 </body>
 </html>
