@@ -153,17 +153,23 @@
 
     <div class="{% if user.is_authenticated %}main-content{% endif %}">
         {% if user.is_authenticated %}
-        <nav class="navbar navbar-expand-lg navbar-light navbar-custom rounded px-4 py-3">
-            <div class="container-fluid flex-wrap">
-                <span class="navbar-brand mb-0 h1 d-flex align-items-center">
-                    <button class="btn btn-outline-secondary d-lg-none me-3" id="sidebarToggle">
-                        <i class="fas fa-bars"></i>
+        <nav class="navbar navbar-expand-lg navbar-light navbar-custom rounded px-3 py-2 px-md-4 py-md-3">
+            <div class="container-fluid flex-column align-items-start flex-md-row align-items-md-center">
+                <div class="w-100 d-flex justify-content-between align-items-center mb-2 mb-md-0 w-md-auto">
+                    <span class="navbar-brand mb-0 h1 d-flex align-items-center">
+                        <button class="btn btn-sm btn-outline-secondary d-lg-none me-2" id="sidebarToggle">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <span class="fs-6 fs-md-5 fw-bold text-truncate" style="max-width: 220px;">Dr.NGPIT ERP</span>
+                    </span>
+                    <button class="btn btn-sm btn-outline-secondary d-md-none" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="fas fa-key"></i>
                     </button>
-                    <span style="font-size: 1rem;">Function Requirement System</span>
-                </span>
-                <div class="d-flex align-items-center mt-2 mt-lg-0">
-                    <span class="me-3">Welcome, <strong>{{ user.get_full_name|default:user.username }}</strong> ({{ user.get_role_display }})</span>
-                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                </div>
+                <div class="d-flex align-items-center text-muted small ms-md-auto mt-1 mt-md-0">
+                    <span class="me-2 text-truncate" style="max-width: 180px;">{{ user.get_full_name|default:user.username }}</span>
+                    <span class="badge bg-light text-dark border">{{ user.get_role_display }}</span>
+                    <button class="btn btn-sm btn-outline-secondary d-none d-md-inline-block ms-3" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                         <i class="fas fa-key me-1"></i> Change Password
                     </button>
                 </div>

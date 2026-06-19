@@ -23,17 +23,19 @@
 <div class="card card-custom">
     <div class="card-body">
         {% if user.role in 'MANAGEMENT ADMIN' %}
-        <form method="get" class="mb-3 d-flex align-items-center flex-wrap">
-            <label class="me-2 fw-bold text-muted small"><i class="fas fa-filter me-1"></i>Filter by Department:</label>
-            <select name="department" class="form-select form-select-sm w-auto d-inline-block me-2" onchange="this.form.submit()">
-                <option value="">All Departments</option>
-                {% for d in departments %}
-                <option value="{{ d.id }}" {% if selected_dept_id == d.id|stringformat:"s" %}selected{% endif %}>{{ d.department_code }} - {{ d.department_name }}</option>
-                {% endfor %}
-            </select>
-            {% if selected_dept_id %}
-            <a href="{% url 'manage_users' %}" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
-            {% endif %}
+        <form method="get" class="mb-3">
+            <label class="fw-bold text-muted small mb-2"><i class="fas fa-filter me-1"></i>Filter by Department:</label>
+            <div class="d-flex flex-wrap gap-2">
+                <select name="department" class="form-select form-select-sm" style="max-width: 250px;" onchange="this.form.submit()">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d.id }}" {% if selected_dept_id == d.id|stringformat:"s" %}selected{% endif %}>{{ d.department_code }} - {{ d.department_name }}</option>
+                    {% endfor %}
+                </select>
+                {% if selected_dept_id %}
+                <a href="{% url 'manage_users' %}" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
+                {% endif %}
+            </div>
         </form>
         {% endif %}
         <div class="table-responsive">
