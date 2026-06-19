@@ -1,0 +1,460 @@
+[
+{
+    "model": "sessions.session",
+    "pk": "5zyawiawkmd0g0dr7pkfg7ppjikrqtly",
+    "fields": {
+        "session_data": ".eJxVjDEOgzAMAP_iuYqSmISEsXvfENnYFNoKJAJT1b9XSAztene6NxTat7HsVdcyCXTgA1x-IVP_1Pkw8qD5vph-mbd1YnMk5rTV3BbR1_Vs_wYj1RE6cJkpYdJekuXo2ec25daFaENGcRgcZka2LGRxyIqoHNE7bBqKgxJ8vurFN3A:1wa6hr:qmn1s7IeHqUhyuwSrXfHUh_m2ZKNqG-4jo6sFJh7LFc",
+        "expire_date": "2026-07-02T06:58:31.183Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "b24iqehzj16s7ca1dzs2djsh53091099",
+    "fields": {
+        "session_data": ".eJxVjLsOAiEQAP-F2hDkvZb2fgNZlkVODST3qIz_bi65QtuZybxFwm1taVt4TlMRF-HE6ZdlpCf3XZQH9vuQNPo6T1nuiTzsIm-j8Ot6tH-Dhkvbt1Sjz6A9K2AdvSkmovIMrhpjHOXgzw4sggVVGQNpWwJEDZVcJFLi8wXQ7Tdu:1wTzK9:svQhyONFud-bbKZVb18AQY_gDNYSGBeoIUZ0qQwx3sw",
+        "expire_date": "2026-06-15T09:52:45.939Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "xhafmy1euexssgve2lhde45m34uvy9fz",
+    "fields": {
+        "session_data": ".eJxVjDEOwjAMAP_iGUVJ6jS4IztvqOw40AJKpKadEH9HlTrAene6N4y8rdO4tbyMs8IAjuD0C4XTM5fd6IPLvZpUy7rMYvbEHLaZa9X8uhzt32DiNsEAmMR2HZJHr-6sFF28kRXN2CO7zMFHUfVWJIRArEQoCdXbmILn0MPnC_rSN9A:1wXZNN:RX_Ov91Xyip_Le32pIGfALTqKfn4WdIkOkLitmJitsg",
+        "expire_date": "2026-06-25T06:58:53.283Z"
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$BdFhb2ld0ZoHcdfTr9Iy0H$kQBFJD0nQaSvpUNvjUNg2Xleey+gnHVqJDsNe2Kxmvk=",
+        "last_login": null,
+        "is_superuser": true,
+        "username": "admin",
+        "first_name": "System Admin",
+        "last_name": "",
+        "email": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-05-28T07:35:40.563Z",
+        "role": "ADMIN",
+        "first_login_completed": false,
+        "password_setup_token": null,
+        "password_setup_token_expiry": null,
+        "otp_code": null,
+        "otp_expiry": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$jbDxlbcfAnJgytBJ4KWjJI$sb2z8uX0tCHtWCGIPzNPMXv15tOHzW0pgC+p3Vw6QVg=",
+        "last_login": "2026-06-18T06:30:00.709Z",
+        "is_superuser": false,
+        "username": "ao@drngpit.ac.in",
+        "first_name": "",
+        "last_name": "",
+        "email": "ao@drngpit.ac.in",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-11T06:56:56.829Z",
+        "role": "MANAGEMENT",
+        "first_login_completed": false,
+        "password_setup_token": null,
+        "password_setup_token_expiry": null,
+        "otp_code": null,
+        "otp_expiry": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$yfli80wTuvBl6flnBfbI8n$skvePp7X0A8XAGX7+1sduHC2vCVqzXUvjiFIAxvKJ5I=",
+        "last_login": "2026-06-18T06:14:22.752Z",
+        "is_superuser": false,
+        "username": "principal@drngpit.ac.in",
+        "first_name": "",
+        "last_name": "",
+        "email": "principal@drngpit.ac.in",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-11T06:56:57.818Z",
+        "role": "PRINCIPAL",
+        "first_login_completed": false,
+        "password_setup_token": null,
+        "password_setup_token_expiry": null,
+        "otp_code": null,
+        "otp_expiry": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$HQplKRf3Pvjq23LoboJJsT$koy92mMW+5W8Mh1dacXkidtdiktfK9EKFwyCSMRszJA=",
+        "last_login": "2026-06-18T06:58:31.173Z",
+        "is_superuser": false,
+        "username": "24104001@drngpit.ac.in",
+        "first_name": "Aarthi",
+        "last_name": "",
+        "email": "24104001@drngpit.ac.in",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-18T04:13:34.090Z",
+        "role": "HOD",
+        "first_login_completed": false,
+        "password_setup_token": null,
+        "password_setup_token_expiry": null,
+        "otp_code": null,
+        "otp_expiry": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$x3J7P4EbCysQHIwMknnmwi$0vZCR6uV8CH+/1FPC7EiG032LQqXD8aL8kUP4b01WhA=",
+        "last_login": "2026-06-18T06:37:22.728Z",
+        "is_superuser": false,
+        "username": "24104055@drngpit.ac.in",
+        "first_name": "Harshavarthanar",
+        "last_name": "K S",
+        "email": "24104055@drngpit.ac.in",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-18T05:34:52.193Z",
+        "role": "FACULTY",
+        "first_login_completed": false,
+        "password_setup_token": null,
+        "password_setup_token_expiry": null,
+        "otp_code": null,
+        "otp_expiry": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$ARC2wXauutRuHmKsgvnItc$2NuSQ9ouRLsXlpVMUy6WMh4sfXdL9jCVjxzXUQ1dTnY=",
+        "last_login": "2026-06-18T06:54:01.284Z",
+        "is_superuser": false,
+        "username": "24104053@drngpit.ac.in",
+        "first_name": "Haritha",
+        "last_name": "M",
+        "email": "24104053@drngpit.ac.in",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-18T05:34:53.537Z",
+        "role": "HOD",
+        "first_login_completed": false,
+        "password_setup_token": null,
+        "password_setup_token_expiry": null,
+        "otp_code": null,
+        "otp_expiry": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$xnZaGMYZ636PYPWQ2VlwO7$XA4h5Mva27UzwocRp/xLQH8K38eKIMYFd/CxDDZn6TE=",
+        "last_login": "2026-06-18T06:20:24.807Z",
+        "is_superuser": false,
+        "username": "24104017@drngpit.ac.in",
+        "first_name": "Arun",
+        "last_name": "T",
+        "email": "24104017@drngpit.ac.in",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-18T05:34:54.989Z",
+        "role": "FACULTY",
+        "first_login_completed": false,
+        "password_setup_token": null,
+        "password_setup_token_expiry": null,
+        "otp_code": null,
+        "otp_expiry": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "departments.department",
+    "pk": 1,
+    "fields": {
+        "department_name": "Computer Science",
+        "department_code": "CSE"
+    }
+},
+{
+    "model": "departments.department",
+    "pk": 2,
+    "fields": {
+        "department_name": "Electronics",
+        "department_code": "ECE"
+    }
+},
+{
+    "model": "departments.department",
+    "pk": 3,
+    "fields": {
+        "department_name": "Information Technology",
+        "department_code": "IT"
+    }
+},
+{
+    "model": "departments.hod",
+    "pk": 6,
+    "fields": {
+        "user": [
+            "24104001@drngpit.ac.in"
+        ],
+        "department": 2
+    }
+},
+{
+    "model": "departments.hod",
+    "pk": 7,
+    "fields": {
+        "user": [
+            "24104053@drngpit.ac.in"
+        ],
+        "department": 1
+    }
+},
+{
+    "model": "departments.faculty",
+    "pk": 12,
+    "fields": {
+        "user": [
+            "24104055@drngpit.ac.in"
+        ],
+        "department": 1,
+        "designation": "Staff",
+        "contact_number": ""
+    }
+},
+{
+    "model": "departments.faculty",
+    "pk": 14,
+    "fields": {
+        "user": [
+            "24104017@drngpit.ac.in"
+        ],
+        "department": 2,
+        "designation": "Staff",
+        "contact_number": ""
+    }
+},
+{
+    "model": "requests.functionrequest",
+    "pk": 4,
+    "fields": {
+        "faculty": 12,
+        "department": 1,
+        "status": "APPROVED",
+        "function_name": "National Level Workshop on Artificial Intelligence and Generative AI",
+        "function_type": "Workshop",
+        "start_date": "2026-06-19",
+        "end_date": "2026-06-20",
+        "number_of_days": 2,
+        "time_from": "09:00:00",
+        "time_to": "16:30:00",
+        "venue": 2,
+        "type_of_training": "",
+        "number_of_students": 97,
+        "class_name": "II-CSE",
+        "organizer_name": "Dr. S. Mahesh Kumar",
+        "organizer_contact": "9876543210",
+        "chief_guest_name": "Dr. R. Karthik",
+        "chief_guest_designation": "Professor & Head, Department of AI and Data Science",
+        "chief_guest_organization": "Anna University, Chennai",
+        "created_at": "2026-06-18T06:10:37.191Z",
+        "updated_at": "2026-06-18T06:14:31.671Z"
+    }
+},
+{
+    "model": "approvals.approvallog",
+    "pk": 8,
+    "fields": {
+        "function_request": 4,
+        "approver": [
+            "24104053@drngpit.ac.in"
+        ],
+        "stage": "HOD",
+        "status": "APPROVED",
+        "remarks": "Approved",
+        "timestamp": "2026-06-18T06:12:11.449Z"
+    }
+},
+{
+    "model": "approvals.approvallog",
+    "pk": 9,
+    "fields": {
+        "function_request": 4,
+        "approver": [
+            "ao@drngpit.ac.in"
+        ],
+        "stage": "MANAGEMENT",
+        "status": "APPROVED",
+        "remarks": "Approved",
+        "timestamp": "2026-06-18T06:14:05.728Z"
+    }
+},
+{
+    "model": "approvals.approvallog",
+    "pk": 10,
+    "fields": {
+        "function_request": 4,
+        "approver": [
+            "principal@drngpit.ac.in"
+        ],
+        "stage": "PRINCIPAL",
+        "status": "APPROVED",
+        "remarks": "Approved",
+        "timestamp": "2026-06-18T06:14:31.688Z"
+    }
+},
+{
+    "model": "halls.seminarhall",
+    "pk": 1,
+    "fields": {
+        "hall_name": "Main Auditorium",
+        "capacity": 500,
+        "location": "A Block",
+        "facilities": "AC, Projector, Mic"
+    }
+},
+{
+    "model": "halls.seminarhall",
+    "pk": 2,
+    "fields": {
+        "hall_name": "Mini Hall 1",
+        "capacity": 100,
+        "location": "B Block",
+        "facilities": "AC, Projector"
+    }
+},
+{
+    "model": "halls.seminarhall",
+    "pk": 3,
+    "fields": {
+        "hall_name": "Conference Room",
+        "capacity": 50,
+        "location": "Admin Block",
+        "facilities": "AC, Projector, Mic"
+    }
+},
+{
+    "model": "resources.guesthouserequirement",
+    "pk": 4,
+    "fields": {
+        "function_request": 4,
+        "required": true,
+        "number_of_persons": 3,
+        "from_date": "2026-06-18",
+        "to_date": "2026-06-20"
+    }
+},
+{
+    "model": "resources.refreshmentrequirement",
+    "pk": 2,
+    "fields": {
+        "function_request": 4,
+        "tea_required": true,
+        "coffee_required": false,
+        "snacks_required": true,
+        "normal_lunch_count": 0,
+        "veg_lunch_count": 5,
+        "non_veg_lunch_count": 3,
+        "tiffin_count": 105,
+        "required_time": "10:30:00",
+        "payment_through": "INSTITUTION"
+    }
+},
+{
+    "model": "resources.transportrequirement",
+    "pk": 4,
+    "fields": {
+        "function_request": 4,
+        "required": true,
+        "date": "2026-06-18",
+        "pickup_location": "Coimbatore Airport",
+        "pickup_time": "08:30:00",
+        "drop_time": "16:30:00",
+        "pickup_person_name": "Mr. Aravind Raj",
+        "pickup_person_contact": "9876501234"
+    }
+},
+{
+    "model": "resources.powercamerarequirement",
+    "pk": 4,
+    "fields": {
+        "function_request": 4,
+        "mic_required": true,
+        "mic_type": "Cordless",
+        "number_of_mics": 4,
+        "ac_required": true,
+        "projector_required": true,
+        "laptop_required": true,
+        "photographer_required": true,
+        "photographer_type": "OFFICIAL"
+    }
+},
+{
+    "model": "resources.mementorequirement",
+    "pk": 4,
+    "fields": {
+        "function_request": 4,
+        "required": true,
+        "honorarium_worth": "5000",
+        "quantity": 3,
+        "dias_seats": 8,
+        "audience_seats": 97,
+        "table_cloths": 10,
+        "reception_items": "Flower Bouquet, Welcome Kit, Water Bottles, Name Plates"
+    }
+},
+{
+    "model": "event_documents.eventreport",
+    "pk": 3,
+    "fields": {
+        "function_request": 4,
+        "dept_ref_no": "CSE/AIW/2026/001",
+        "objective": "To provide students with practical knowledge of Artificial Intelligence, Generative AI, Machine Learning applications, and current industry trends through expert sessions and hands-on demonstrations.",
+        "funding_agency": "Internal",
+        "alumni_contribution": "Alumni speaker session on AI career opportunities.",
+        "budget_proposed": "75000",
+        "budget_actual": "68500",
+        "participants_internal": "97",
+        "participants_external": "",
+        "outcome": "The workshop enhanced participants' understanding of Artificial Intelligence, Machine Learning, and Generative AI technologies. Students gained exposure to real-world industry applications, current research trends, and career opportunities. The interactive sessions improved technical knowledge and encouraged students to pursue AI-based projects and research activities.",
+        "photo_1": "iqac_photos/event_1.jpg",
+        "photo_2": "iqac_photos/event2.jpg",
+        "brochure": "brochures/Brochure.png",
+        "certificate": "certificates/Certificate.png",
+        "feedback_report": "feedback/feedback.png",
+        "attendance_sheet": "attendance/attendance.webp",
+        "uploaded_at": "2026-06-18T06:37:26.546Z"
+    }
+},
+{
+    "model": "event_documents.reportguest",
+    "pk": 5,
+    "fields": {
+        "event_report": 3,
+        "name": "Dr. R. Karthik",
+        "designation": "Professor & Head, Department of AI and Data Science",
+        "organization_address": "Anna University, Chennai",
+        "mobile": "9876543210",
+        "email": "rkarthik@annauniv.edu",
+        "topic": "Recent Trends in Artificial Intelligence and Generative AI"
+    }
+}
+]
