@@ -30,19 +30,19 @@ class Command(BaseCommand):
 
         # 2. Create Seminar Halls
         halls_data = [
-            {'name': 'Main Auditorium', 'capacity': 1000},
-            {'name': 'CSE Seminar Hall', 'capacity': 150},
-            {'name': 'IT Seminar Hall', 'capacity': 120},
-            {'name': 'ECE Seminar Hall', 'capacity': 200},
+            {'hall_name': 'Main Auditorium', 'capacity': 1000},
+            {'hall_name': 'CSE Seminar Hall', 'capacity': 150},
+            {'hall_name': 'IT Seminar Hall', 'capacity': 120},
+            {'hall_name': 'ECE Seminar Hall', 'capacity': 200},
         ]
 
         for hall_data in halls_data:
             hall, created = SeminarHall.objects.get_or_create(
-                name=hall_data['name'],
+                hall_name=hall_data['hall_name'],
                 defaults={'capacity': hall_data['capacity']}
             )
             if created:
-                self.stdout.write(self.style.SUCCESS(f"Created Seminar Hall: {hall.name}"))
+                self.stdout.write(self.style.SUCCESS(f"Created Seminar Hall: {hall.hall_name}"))
 
         # 3. Create Default Users (Principal, Management)
         users_to_create = [
