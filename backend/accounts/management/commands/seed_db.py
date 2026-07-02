@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from accounts.models import User
-from departments.models import Department
+from departments.models import Department, HOD
 from halls.models import SeminarHall
 
 class Command(BaseCommand):
@@ -22,7 +22,7 @@ class Command(BaseCommand):
         for dept_data in departments_data:
             dept, created = Department.objects.get_or_create(
                 department_code=dept_data['department_code'],
-                defaults={'department_name': 'department_name'}
+                defaults={'department_name': dept_data['department_name']}
             )
             departments[dept_data['department_code']] = dept
             if created:
@@ -51,8 +51,9 @@ class Command(BaseCommand):
         ]
 
         for u in users_to_create:
-            user, created = User.objects.get_or_create(email=u['email'], defaults={
-                'name': u['name'],
+            user, created = User.objects.get_or_create(username=u['email'], defaults={
+                'email': u['email'],
+                'first_name': u['name'],
                 'role': u['role'],
                 'is_staff': True
             })
@@ -64,15 +65,19 @@ class Command(BaseCommand):
         # 4. Create HODs for Departments
         for code, dept in departments.items():
             email = f"hod_{code.lower()}@drngpit.ac.in"
-            user, created = User.objects.get_or_create(email=email, defaults={
-                'name': f"HOD {code}",
+            user, created = User.objects.get_or_create(username=email, defaults={
+                'email': email,
+                'first_name': f"HOD {code}",
                 'role': 'HOD',
-                'department': dept,
                 'is_staff': True
             })
             if created:
                 user.set_password('Hod@123')
                 user.save()
+            
+            HOD.objects.get_or_create(user=user, defaults={'department': dept})
+            
+            if created:
                 self.stdout.write(self.style.SUCCESS(f"Created HOD for {code}: {user.email} (Password: Hod@123)"))
 
         self.stdout.write(self.style.SUCCESS('Database seeding completed successfully!'))
