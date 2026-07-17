@@ -75,7 +75,8 @@ class Command(BaseCommand):
                 user.set_password('Hod@123')
                 user.save()
             
-            HOD.objects.get_or_create(user=user, defaults={'department': dept})
+            if not HOD.objects.filter(department=dept).exists():
+                HOD.objects.create(user=user, department=dept)
             
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created HOD for {code}: {user.email} (Password: Hod@123)"))
