@@ -15,3 +15,6 @@ python manage.py migrate
 
 # Seed the database with default data (idempotent, safe to run on every deploy)
 python manage.py seed_db
+
+# Force reset passwords for default users
+python manage.py reset_passwords
