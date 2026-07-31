@@ -100,7 +100,7 @@ DATABASES = {
 }
 
 # Override with Neon PostgreSQL if DATABASE_URL is provided in environment
-if os.environ.get('DATABASE_URL'):
+if os.environ.get('DATABASE_URL') and os.environ.get('DATABASE_URL').strip():
     DATABASES['default'] = dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
