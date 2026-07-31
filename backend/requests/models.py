@@ -6,6 +6,7 @@ class FunctionRequest(models.Model):
     STATUS_CHOICES = (
         ('DRAFT', 'Draft'),
         ('PENDING_HOD', 'Pending HOD Approval'),
+        ('PENDING_DEAN', 'Pending Dean Approval'),
         ('PENDING_MANAGEMENT', 'Pending Management Approval'),
         ('PENDING_PRINCIPAL', 'Pending Principal Approval'),
         ('APPROVED', 'Approved'),
@@ -35,10 +36,6 @@ class FunctionRequest(models.Model):
     chief_guest_name = models.CharField(max_length=100, blank=True)
     chief_guest_designation = models.CharField(max_length=100, blank=True)
     chief_guest_organization = models.CharField(max_length=200, blank=True)
-
-    @property
-    def has_report(self):
-        return hasattr(self, 'report')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

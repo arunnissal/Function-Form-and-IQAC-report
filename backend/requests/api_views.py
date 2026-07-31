@@ -46,6 +46,12 @@ class FunctionRequestViewSet(viewsets.ModelViewSet):
                 queryset = FunctionRequest.objects.filter(department=user.hod_profile.department, status='PENDING_HOD')
             except:
                 pass
+        elif user.role == 'DEAN_COMPUTING':
+            computing_depts = ['CSE', 'CSE(CS)', 'AIDS', 'IT', 'CSBS']
+            queryset = FunctionRequest.objects.filter(
+                department__department_code__in=computing_depts, 
+                status='PENDING_DEAN'
+            )
         elif user.role == 'MANAGEMENT':
             queryset = FunctionRequest.objects.filter(status='PENDING_MANAGEMENT')
         elif user.role == 'PRINCIPAL':
@@ -82,6 +88,12 @@ class FunctionRequestViewSet(viewsets.ModelViewSet):
 
         new_status = ''
         if role == 'HOD' and req.status == 'PENDING_HOD':
+            computing_depts = ['CSE', 'CSE(CS)', 'AIDS', 'IT', 'CSBS']
+            if req.department.department_code.upper() in computing_depts:
+                new_status = 'PENDING_DEAN'
+            else:
+                new_status = 'PENDING_MANAGEMENT'
+        elif role == 'DEAN_COMPUTING' and req.status == 'PENDING_DEAN':
             new_status = 'PENDING_MANAGEMENT'
         elif role == 'MANAGEMENT' and req.status == 'PENDING_MANAGEMENT':
             new_status = 'PENDING_PRINCIPAL'
@@ -109,7 +121,7 @@ class FunctionRequestViewSet(viewsets.ModelViewSet):
         remarks = request.data.get('remarks', '')
 
         # Basic permission check
-        if role not in ['HOD', 'MANAGEMENT', 'PRINCIPAL']:
+        if role not in ['HOD', 'DEAN_COMPUTING', 'MANAGEMENT', 'PRINCIPAL']:
             return Response({"detail": "Not authorized to reject."}, status=status.HTTP_403_FORBIDDEN)
 
         req.status = 'REJECTED'
@@ -130,7 +142,7 @@ class FunctionRequestViewSet(viewsets.ModelViewSet):
         role = request.user.role
         remarks = request.data.get('remarks', 'Cancelled due to emergency')
 
-        if role not in ['MANAGEMENT', 'PRINCIPAL', 'ADMIN']:
+        if role not in ['MANAGEMENT', 'PRINCIPAL'] and not request.user.is_superuser:
             return Response({"detail": "Not authorized to cancel requests."}, status=status.HTTP_403_FORBIDDEN)
 
         req.status = 'REJECTED'  # Or create a 'CANCELLED' status

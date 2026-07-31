@@ -15,6 +15,12 @@ def approval_queue(request):
             reqs = FunctionRequest.objects.filter(department=dept, status='PENDING_HOD').order_by('start_date')
         except:
             pass
+    elif role == 'DEAN_COMPUTING':
+        computing_depts = ['CSE', 'CSE(CS)', 'AIDS', 'IT', 'CSBS']
+        reqs = FunctionRequest.objects.filter(
+            department__department_code__in=computing_depts, 
+            status='PENDING_DEAN'
+        ).order_by('start_date')
     elif role == 'MANAGEMENT':
         reqs = FunctionRequest.objects.filter(status='PENDING_MANAGEMENT').order_by('start_date')
     elif role == 'PRINCIPAL':
@@ -34,6 +40,12 @@ def request_detail(request, req_id):
         if action == 'APPROVE':
             new_status = ''
             if role == 'HOD':
+                computing_depts = ['CSE', 'CSE(CS)', 'AIDS', 'IT', 'CSBS']
+                if req.department.department_code.upper() in computing_depts:
+                    new_status = 'PENDING_DEAN'
+                else:
+                    new_status = 'PENDING_MANAGEMENT'
+            elif role == 'DEAN_COMPUTING':
                 new_status = 'PENDING_MANAGEMENT'
             elif role == 'MANAGEMENT':
                 new_status = 'PENDING_PRINCIPAL'
@@ -70,6 +82,8 @@ def request_detail(request, req_id):
     can_approve = False
     if role == 'HOD' and req.status == 'PENDING_HOD':
         can_approve = True
+    elif role == 'DEAN_COMPUTING' and req.status == 'PENDING_DEAN':
+        can_approve = True
     elif role == 'MANAGEMENT' and req.status == 'PENDING_MANAGEMENT':
         can_approve = True
     elif role == 'PRINCIPAL' and req.status == 'PENDING_PRINCIPAL':
@@ -88,6 +102,8 @@ def edit_request(request, req_id):
     
     can_approve = False
     if role == 'HOD' and req.status == 'PENDING_HOD':
+        can_approve = True
+    elif role == 'DEAN_COMPUTING' and req.status == 'PENDING_DEAN':
         can_approve = True
     elif role == 'MANAGEMENT' and req.status == 'PENDING_MANAGEMENT':
         can_approve = True

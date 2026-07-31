@@ -79,9 +79,10 @@ export default function ViewRequest() {
   const getStatusBadge = (s) => {
     const badges = {
       'DRAFT': { color: '#64748b', bg: '#f1f5f9', label: 'Draft' },
-      'PENDING_HOD': { color: '#ca8a04', bg: '#fef08a', label: 'Pending HOD' },
-      'PENDING_MANAGEMENT': { color: '#ca8a04', bg: '#fef08a', label: 'Pending Management' },
-      'PENDING_PRINCIPAL': { color: '#ca8a04', bg: '#fef08a', label: 'Pending Principal' },
+      'PENDING_HOD': { color: '#d97706', bg: '#fef3c7', label: 'Pending HOD' },
+      'PENDING_DEAN': { color: '#0891b2', bg: '#cffafe', label: 'Pending Dean' },
+      'PENDING_MANAGEMENT': { color: '#2563eb', bg: '#dbeafe', label: 'Pending Management' },
+      'PENDING_PRINCIPAL': { color: '#7c3aed', bg: '#f3e8ff', label: 'Pending Principal' },
       'APPROVED': { color: '#15803d', bg: '#dcfce3', label: 'Approved' },
       'REJECTED': { color: '#b91c1c', bg: '#fee2e2', label: 'Rejected' }
     };
@@ -92,13 +93,14 @@ export default function ViewRequest() {
   // Determine if the current user can approve/reject this request
   const canApprove = (
     (user?.role === 'HOD' && status === 'PENDING_HOD') ||
-    (['MANAGEMENT', 'ADMIN'].includes(user?.role) && status === 'PENDING_MANAGEMENT') ||
+    (user?.role === 'DEAN_COMPUTING' && status === 'PENDING_DEAN') ||
+    ((user?.role === 'MANAGEMENT' || user?.is_superuser) && status === 'PENDING_MANAGEMENT') ||
     (user?.role === 'PRINCIPAL' && status === 'PENDING_PRINCIPAL')
   );
 
   // Determine if the user can edit this request
   let canEdit = false;
-  if (['ADMIN'].includes(user?.role)) {
+  if (user?.is_superuser) {
     canEdit = true;
   } else if (status === 'DRAFT' || status === 'REJECTED') {
     if (['FACULTY', 'HOD'].includes(user?.role)) canEdit = true;
@@ -189,6 +191,33 @@ export default function ViewRequest() {
           </div>
         )}
 
+        {/* Management direct rejection capability at any stage */}
+        {!canApprove && user?.role === 'MANAGEMENT' && ['PENDING_HOD', 'PENDING_DEAN', 'PENDING_PRINCIPAL'].includes(status) && (
+          <div style={{marginTop: '2rem', background: '#fff1f2', padding: '1.5rem', borderRadius: '8px', border: '1px solid #fecdd3'}}>
+            <h4 style={{ color: '#9f1239', margin: '0 0 1rem 0' }}>Administrative Reject Option</h4>
+            <div style={{marginBottom: '1rem'}}>
+              <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold', color: '#9f1239'}}>Rejection Remarks (Required)</label>
+              <textarea 
+                className="form-input" 
+                rows="3" 
+                value={remarks} 
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Please enter the reason for rejection..."
+                style={{borderColor: '#fecdd3'}}
+              />
+            </div>
+            <button onClick={() => {
+              if(!remarks.trim()){
+                alert("Please provide rejection remarks.");
+                return;
+              }
+              handleAction('reject');
+            }} className="btn" style={{background: '#e11d48', color: 'white', width: '100%'}}>
+              ❌ Reject Request
+            </button>
+          </div>
+        )}
+
         {/* Footer Actions */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <button onClick={() => navigate(-1)} className="btn btn-outline">
@@ -196,7 +225,7 @@ export default function ViewRequest() {
           </button>
           
           <div style={{display: 'flex', gap: '1rem'}}>
-            {['MANAGEMENT', 'PRINCIPAL', 'ADMIN'].includes(user?.role) && status !== 'REJECTED' && (
+            {(['MANAGEMENT', 'PRINCIPAL'].includes(user?.role) || user?.is_superuser) && status !== 'REJECTED' && (
               <button onClick={handleForceCancel} className="btn btn-outline" style={{borderColor: '#ef4444', color: '#ef4444'}}>
                 ⚠️ Force Cancel Event
               </button>

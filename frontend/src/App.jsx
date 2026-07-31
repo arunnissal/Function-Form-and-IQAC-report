@@ -10,15 +10,17 @@ import EventCalendar from './pages/EventCalendar';
 import ManageHalls from './pages/ManageHalls';
 import ManageDepartments from './pages/ManageDepartments';
 import ManageStaff from './pages/ManageStaff';
-import IQACReports from './pages/IQACReports';
 import ChangePassword from './pages/ChangePassword';
 import EditRequest from './pages/EditRequest';
 import ViewRequest from './pages/ViewRequest';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const ProtectedRoute = ({ children, allowedRoles, requireSuperuser }) => {
   const { user, loading } = useContext(AuthContext);
   if (loading) return <div style={{padding: '2rem', textAlign: 'center'}}>Loading application...</div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (requireSuperuser && !user.is_superuser && user.role !== 'MANAGEMENT') {
+    return <Navigate to="/dashboard" replace />;
+  }
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -42,7 +44,7 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/edit-request/:id" element={
-            <ProtectedRoute allowedRoles={['FACULTY', 'HOD', 'MANAGEMENT', 'PRINCIPAL', 'ADMIN']}>
+            <ProtectedRoute allowedRoles={['FACULTY', 'HOD', 'MANAGEMENT', 'PRINCIPAL', 'DEAN_COMPUTING']}>
               <EditRequest />
             </ProtectedRoute>
           } />
@@ -67,25 +69,21 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/manage-halls" element={
-            <ProtectedRoute>
+            <ProtectedRoute requireSuperuser={true}>
               <ManageHalls />
             </ProtectedRoute>
           } />
           <Route path="/manage-departments" element={
-            <ProtectedRoute>
+            <ProtectedRoute requireSuperuser={true}>
               <ManageDepartments />
             </ProtectedRoute>
           } />
           <Route path="/manage-staff" element={
-            <ProtectedRoute>
+            <ProtectedRoute requireSuperuser={true}>
               <ManageStaff />
             </ProtectedRoute>
           } />
-          <Route path="/reports" element={
-            <ProtectedRoute>
-              <IQACReports />
-            </ProtectedRoute>
-          } />
+
           <Route path="/change-password" element={
             <ProtectedRoute>
               <ChangePassword />

@@ -9,10 +9,8 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('requests/', include('requests.urls')),
     path('approvals/', include('approvals.urls')),
-    path('reports/', include('reports.urls')),
     path('halls/', include('halls.urls')),
     path('departments/', include('departments.urls')),
-    path('documents/', include('event_documents.urls')),
     path('api/v1/', include('function_requirement_system.api.urls')),
 ]
 

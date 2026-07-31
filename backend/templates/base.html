@@ -120,11 +120,8 @@
         </a>
         {% endif %}
 
-        {% if user.role == 'ADMIN' or user.role == 'PRINCIPAL' or user.role == 'MANAGEMENT' %}
-        <a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
-            <i class="fas fa-chart-bar me-2"></i> IQAC Reports
-        </a>
-        {% endif %}
+        
+
         
         {% if user.role == 'MANAGEMENT' or user.role == 'ADMIN' %}
         <a href="{% url 'manage_halls' %}" class="{% if request.resolver_match.url_name == 'manage_halls' %}active{% endif %}">

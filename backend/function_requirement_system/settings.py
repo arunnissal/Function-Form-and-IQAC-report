@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'requests',
     'approvals',
     'halls',
-    'reports',
     'resources',
     'event_documents',
 ]

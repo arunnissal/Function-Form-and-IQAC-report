@@ -30,6 +30,7 @@ export default function MyRequests() {
     const badges = {
       'DRAFT': { color: '#64748b', bg: '#f1f5f9', label: 'Draft' },
       'PENDING_HOD': { color: '#ca8a04', bg: '#fef08a', label: 'Pending HOD' },
+      'PENDING_DEAN': { color: '#0891b2', bg: '#cffafe', label: 'Pending Dean' },
       'PENDING_MANAGEMENT': { color: '#ca8a04', bg: '#fef08a', label: 'Pending Management' },
       'PENDING_PRINCIPAL': { color: '#ca8a04', bg: '#fef08a', label: 'Pending Principal' },
       'APPROVED': { color: '#15803d', bg: '#dcfce3', label: 'Approved' },

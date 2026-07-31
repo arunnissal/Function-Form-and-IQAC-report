@@ -7,7 +7,7 @@ class User(AbstractUser):
         ('HOD', 'HOD'),
         ('MANAGEMENT', 'Management / AO'),
         ('PRINCIPAL', 'Principal'),
-        ('ADMIN', 'System Admin'),
+        ('DEAN_COMPUTING', 'Dean Computing'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='FACULTY')
     

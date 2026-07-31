@@ -32,7 +32,7 @@ def custom_login(request):
                 'Staff': 'FACULTY',
                 'HOD': 'HOD',
                 'Principal': 'PRINCIPAL',
-                'Admin': 'ADMIN'
+                'Dean Computing': 'DEAN_COMPUTING'
             }
             expected_role = role_map.get(position)
             
@@ -60,8 +60,8 @@ def dashboard(request):
         context['role_title'] = 'Management / AO Dashboard'
     elif user.role == 'PRINCIPAL':
         context['role_title'] = 'Principal Dashboard'
-    elif user.role == 'ADMIN':
-        context['role_title'] = 'Admin Dashboard'
+    elif user.role == 'DEAN_COMPUTING':
+        context['role_title'] = 'Dean Computing Dashboard'
         
     return render(request, 'accounts/dashboard.html', context)
 
@@ -87,7 +87,7 @@ def change_password(request):
 
 @login_required
 def manage_users(request):
-    if request.user.role not in ['MANAGEMENT', 'ADMIN', 'HOD']:
+    if request.user.role != 'HOD' and not request.user.is_superuser:
         return redirect('dashboard')
         
     users = []
@@ -96,7 +96,7 @@ def manage_users(request):
         from departments.models import Faculty
         faculty_users = Faculty.objects.filter(department=dept).select_related('user')
         users = [f.user for f in faculty_users]
-    elif request.user.role in ['ADMIN', 'MANAGEMENT']:
+    elif request.user.is_superuser:
         users = User.objects.exclude(username='admin')
         
     from departments.models import Department
@@ -104,7 +104,7 @@ def manage_users(request):
     
     selected_dept_id = request.GET.get('department', '')
     
-    if request.user.role in ['ADMIN', 'MANAGEMENT']:
+    if request.user.is_superuser:
         if selected_dept_id:
             filtered_users = []
             for u in users:
@@ -114,13 +114,13 @@ def manage_users(request):
                     filtered_users.append(u)
             users = filtered_users
     
-    if request.method == 'POST' and request.user.role == 'MANAGEMENT':
+    if request.method == 'POST' and request.user.is_superuser:
         action = request.POST.get('action')
         
         if action == 'delete':
             user_id = request.POST.get('user_id')
             user_to_del = get_object_or_404(User, id=user_id)
-            if user_to_del.is_superuser or user_to_del.role in ['ADMIN', 'PRINCIPAL']:
+            if user_to_del.is_superuser or user_to_del.role in ['DEAN_COMPUTING', 'PRINCIPAL']:
                 messages.error(request, "Cannot delete this high-level user.")
             else:
                 user_to_del.delete()
@@ -131,7 +131,7 @@ def manage_users(request):
             user_id = request.POST.get('user_id')
             user_to_reset = get_object_or_404(User, id=user_id)
             
-            if user_to_reset.is_superuser or user_to_reset.role in ['ADMIN', 'PRINCIPAL']:
+            if user_to_reset.is_superuser or user_to_reset.role in ['DEAN_COMPUTING', 'PRINCIPAL']:
                 messages.error(request, "Cannot reset password for this high-level user.")
             else:
                 default_password = user_to_reset.email.split('@')[0]
@@ -146,7 +146,7 @@ def manage_users(request):
             new_position = request.POST.get('position') # 'Staff' or 'HOD'
             user_to_edit = get_object_or_404(User, id=user_id)
             
-            if user_to_edit.is_superuser or user_to_edit.role in ['ADMIN', 'PRINCIPAL']:
+            if user_to_edit.is_superuser or user_to_edit.role in ['DEAN_COMPUTING', 'PRINCIPAL']:
                 messages.error(request, "Cannot edit this high-level user.")
                 return redirect('manage_users')
                 

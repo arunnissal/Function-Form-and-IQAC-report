@@ -164,7 +164,7 @@ def my_requests(request):
         reqs = FunctionRequest.objects.filter(faculty__user=request.user).order_by('-created_at')
     elif request.user.role == 'HOD':
         reqs = FunctionRequest.objects.filter(department=request.user.hod_profile.department).order_by('-created_at')
-    elif request.user.role in ['MANAGEMENT', 'PRINCIPAL', 'ADMIN']:
+    elif request.user.role in ['MANAGEMENT', 'PRINCIPAL'] or request.user.is_superuser:
         from approvals.models import ApprovalLog
         approved_req_ids = ApprovalLog.objects.filter(
             approver=request.user, 

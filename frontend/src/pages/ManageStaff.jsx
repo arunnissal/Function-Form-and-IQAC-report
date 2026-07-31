@@ -135,7 +135,7 @@ export default function ManageStaff() {
       'HOD': { color: '#0891b2', bg: '#cffafe' },
       'MANAGEMENT': { color: '#9333ea', bg: '#f3e8ff' },
       'PRINCIPAL': { color: '#b91c1c', bg: '#fee2e2' },
-      'ADMIN': { color: '#111827', bg: '#f3f4f6' }
+      'DEAN_COMPUTING': { color: '#111827', bg: '#f3f4f6' }
     };
     const b = badges[role] || badges['FACULTY'];
     return (

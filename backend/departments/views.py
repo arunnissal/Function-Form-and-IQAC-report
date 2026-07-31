@@ -5,7 +5,7 @@ from .models import Department
 
 @login_required
 def manage_departments(request):
-    if request.user.role not in ['MANAGEMENT', 'ADMIN']:
+    if not request.user.is_superuser:
         messages.error(request, "Permission denied.")
         return redirect('dashboard')
         

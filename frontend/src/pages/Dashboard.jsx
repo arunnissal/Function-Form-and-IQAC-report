@@ -25,10 +25,16 @@ export default function Dashboard() {
           } else if (req.status === 'REJECTED') {
             rejected++;
           } else if (req.status !== 'DRAFT') {
-            if (['MANAGEMENT', 'ADMIN'].includes(user?.role)) {
+            if (user?.role === 'MANAGEMENT' || user?.is_superuser) {
               if (req.status === 'PENDING_MANAGEMENT') pending++;
             } else if (user?.role === 'PRINCIPAL') {
               if (req.status === 'PENDING_PRINCIPAL') pending++;
+            } else if (user?.role === 'DEAN_COMPUTING') {
+              const computingDepts = ['CSE', 'CSE(CS)', 'AIDS', 'IT', 'CSBS'];
+              const deptCode = (req.department_code || '').toUpperCase();
+              if (req.status === 'PENDING_DEAN' && computingDepts.includes(deptCode)) {
+                pending++;
+              }
             } else {
               pending++; // Faculty and HOD see all pending requests they have access to
             }
@@ -51,7 +57,7 @@ export default function Dashboard() {
       if (filterStatus === 'PENDING') {
         navigate('/approvals');
       } else {
-        navigate(`/reports?filter=${filterStatus}`);
+        navigate(`/my-requests?filter=${filterStatus}`);
       }
     }
   };

@@ -16,6 +16,5 @@ urlpatterns = [
     path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/me/', UserProfileView.as_view(), name='auth_me'),
-    path('iqac/', include('event_documents.api_urls')),
     path('', include(router.urls)),
 ]

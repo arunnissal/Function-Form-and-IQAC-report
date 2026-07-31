@@ -29,15 +29,14 @@ export default function Sidebar({ isOpen }) {
         
         <Link to="/calendar" className={`sidebar-link ${isActive('/calendar')}`}>Event Calendar</Link>
 
-        {['HOD', 'MANAGEMENT', 'PRINCIPAL'].includes(user?.role) && (
+        {['HOD', 'DEAN_COMPUTING', 'MANAGEMENT', 'PRINCIPAL'].includes(user?.role) && (
           <Link to="/approvals" className={`sidebar-link ${isActive('/approvals')}`}>Approvals</Link>
         )}
 
-        {['ADMIN', 'PRINCIPAL', 'MANAGEMENT', 'HOD', 'FACULTY'].includes(user?.role) && (
-          <Link to="/reports" className={`sidebar-link ${isActive('/reports')}`}>IQAC Reports</Link>
-        )}
+
+
         
-        {['MANAGEMENT', 'ADMIN'].includes(user?.role) && (
+        {(user?.is_superuser || user?.role === 'MANAGEMENT') && (
           <>
             <Link to="/manage-halls" className={`sidebar-link ${isActive('/manage-halls')}`}>Seminar Halls</Link>
             <Link to="/manage-departments" className={`sidebar-link ${isActive('/manage-departments')}`}>Departments</Link>

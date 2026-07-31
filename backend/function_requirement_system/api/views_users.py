@@ -9,9 +9,9 @@ import pandas as pd
 
 User = get_user_model()
 
-class IsManagementOrAdmin(permissions.BasePermission):
+class IsSuperuserOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role in ['MANAGEMENT', 'ADMIN']
+        return request.user.is_authenticated and (request.user.is_superuser or request.user.role == 'MANAGEMENT')
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
@@ -23,13 +23,13 @@ class UserViewSet(viewsets.ModelViewSet):
             dept = user.hod_profile.department
             faculty_users = Faculty.objects.filter(department=dept).select_related('user')
             return User.objects.filter(id__in=[f.user.id for f in faculty_users])
-        elif user.role in ['ADMIN', 'MANAGEMENT']:
-            return User.objects.exclude(username='admin')
+        elif user.is_superuser or user.role == 'MANAGEMENT':
+            return User.objects.exclude(username__in=['admin', 'admin@drngpit.ac.in'])
         return User.objects.none()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        if request.user.role not in ['MANAGEMENT', 'ADMIN']:
+        if not request.user.is_superuser and request.user.role != 'MANAGEMENT':
             return Response({'detail': 'Not allowed'}, status=status.HTTP_403_FORBIDDEN)
         
         email = request.data.get('email')
@@ -68,14 +68,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        if request.user.role not in ['MANAGEMENT', 'ADMIN']:
+        if not request.user.is_superuser and request.user.role != 'MANAGEMENT':
             return Response({'detail': 'Not allowed'}, status=status.HTTP_403_FORBIDDEN)
             
         user_to_edit = self.get_object()
         position = request.data.get('position')
         dept_id = request.data.get('department')
         
-        if user_to_edit.role in ['ADMIN', 'PRINCIPAL', 'MANAGEMENT']:
+        if user_to_edit.is_superuser or user_to_edit.role in ['DEAN_COMPUTING', 'PRINCIPAL']:
             return Response({'detail': 'Cannot edit high-level users'}, status=status.HTTP_403_FORBIDDEN)
             
         dept = Department.objects.get(id=dept_id)
@@ -96,7 +96,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(user_to_edit)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['post'], permission_classes=[IsManagementOrAdmin])
+    @action(detail=False, methods=['post'], permission_classes=[IsSuperuserOnly])
     def bulk_add(self, request):
         excel_file = request.FILES.get('excel_file')
         if not excel_file:
@@ -182,7 +182,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response({'detail': 'Password changed successfully.'})
 
-    @action(detail=True, methods=['post'], permission_classes=[IsManagementOrAdmin])
+    @action(detail=True, methods=['post'], permission_classes=[IsSuperuserOnly])
     def reset_password(self, request, pk=None):
         user = self.get_object()
         # Reset password to the part of the email before @
@@ -190,3 +190,8 @@ class UserViewSet(viewsets.ModelViewSet):
         user.set_password(default_password)
         user.save()
         return Response({'detail': f'Password successfully reset to default ({default_password}).'})
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.is_superuser and request.user.role != 'MANAGEMENT':
+            return Response({'detail': 'Not allowed'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)

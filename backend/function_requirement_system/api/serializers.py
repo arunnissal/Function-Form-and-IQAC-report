@@ -13,6 +13,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['role'] = user.role
         token['name'] = user.get_full_name() or user.username
+        token['is_superuser'] = user.is_superuser
         return token
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'role', 'is_active', 'department']
+        fields = ['id', 'email', 'username', 'role', 'is_active', 'department', 'is_superuser']
 
     def get_department(self, obj):
         if obj.role == 'FACULTY' and hasattr(obj, 'faculty_profile') and obj.faculty_profile.department:
