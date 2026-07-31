@@ -166,7 +166,7 @@ DEFAULT_FROM_EMAIL = 'noreply@drngpit.ac.in'
 # CORS Settings
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
 if not CORS_ALLOW_ALL_ORIGINS:
-    CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+    CORS_ALLOWED_ORIGINS = [o for o in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if o.strip()]
 
 # REST Framework Settings
 REST_FRAMEWORK = {

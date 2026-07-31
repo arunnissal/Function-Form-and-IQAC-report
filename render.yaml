@@ -14,7 +14,7 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: CORS_ALLOW_ALL_ORIGINS
-        value: "False"
+        value: "True"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
