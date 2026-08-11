@@ -60,6 +60,25 @@ export default function MyRequests() {
     return true;
   });
 
+  const handleDownloadPDF = async (reqId) => {
+    try {
+      const response = await api.get(`requests/${reqId}/generate_pdf/`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `function_request_${reqId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Failed to download PDF", err);
+      alert("Could not generate PDF. Please try again.");
+    }
+  };
+
   return (
     <Layout title="My Requests">
       <div style={{ maxWidth: '1000px', margin: '0 auto'}}>
@@ -107,9 +126,12 @@ export default function MyRequests() {
                       <td style={{padding: '1rem'}}>{req.venue_name || 'N/A'}</td>
                       <td style={{padding: '1rem'}}>{req.start_date || 'N/A'}</td>
                       <td style={{padding: '1rem'}}>{getStatusBadge(req.status)}</td>
-                      <td style={{padding: '1rem', textAlign: 'center'}}>
+                      <td style={{padding: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center'}}>
                         <button onClick={() => navigate(`/request/${req.id}`)} className="btn btn-outline" style={{padding: '0.4rem 0.8rem', fontSize: '0.875rem', borderColor: '#3b82f6', color: '#3b82f6'}}>
-                          View / Action
+                          View
+                        </button>
+                        <button onClick={() => handleDownloadPDF(req.id)} className="btn btn-outline" style={{padding: '0.4rem 0.8rem', fontSize: '0.875rem', borderColor: '#64748b', color: '#64748b'}}>
+                          📄 PDF
                         </button>
                       </td>
                     </tr>
