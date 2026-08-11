@@ -9,13 +9,17 @@ class FunctionRequest(models.Model):
         ('PENDING_DEAN', 'Pending Dean Approval'),
         ('PENDING_MANAGEMENT', 'Pending Management Approval'),
         ('PENDING_PRINCIPAL', 'Pending Principal Approval'),
+        ('PENDING_FINAL_CONFIRMATION', 'Pending Final Confirmation'),
+        ('RETURNED_FOR_CORRECTION', 'Returned for Correction'),
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
+        ('CANCELLED', 'Cancelled'),
     )
 
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='DRAFT')
+    previous_status = models.CharField(max_length=30, blank=True, null=True)
 
     # Step 1 Fields
     function_name = models.CharField(max_length=200)

@@ -1,13 +1,15 @@
-from django.urls import path
-from django.contrib.auth.views import LogoutView
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from function_requirement_system.api.views_users import UserViewSet
+from function_requirement_system.api.views import CustomTokenObtainPairView, UserProfileView
+from rest_framework_simplejwt.views import TokenRefreshView
+
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
-    path('', views.dashboard, name='home'),
-    path('login/', views.custom_login, name='login'),
-    path('dashboard/', views.dashboard, name='dashboard'),
-    path('manage-users/', views.manage_users, name='manage_users'),
-    path('change-password/', views.change_password, name='change_password'),
-    path('download-staff-template/', views.download_staff_template, name='download_staff_template'),
-    path('logout/', LogoutView.as_view(), name='logout'),
+    path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/me/', UserProfileView.as_view(), name='auth_me'),
+    path('', include(router.urls)),
 ]

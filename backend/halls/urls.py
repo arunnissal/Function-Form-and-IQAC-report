@@ -1,7 +1,10 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from function_requirement_system.api.views_core import SeminarHallViewSet
+
+router = DefaultRouter()
+router.register(r'halls', SeminarHallViewSet, basename='hall')
 
 urlpatterns = [
-    path('manage/', views.manage_halls, name='manage_halls'),
-    path('availability/', views.hall_availability, name='hall_availability'),
+    path('', include(router.urls)),
 ]

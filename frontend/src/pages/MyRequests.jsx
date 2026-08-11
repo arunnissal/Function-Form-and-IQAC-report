@@ -33,6 +33,7 @@ export default function MyRequests() {
       'PENDING_DEAN': { color: '#0891b2', bg: '#cffafe', label: 'Pending Dean' },
       'PENDING_MANAGEMENT': { color: '#ca8a04', bg: '#fef08a', label: 'Pending Management' },
       'PENDING_PRINCIPAL': { color: '#ca8a04', bg: '#fef08a', label: 'Pending Principal' },
+      'PENDING_FINAL_CONFIRMATION': { color: '#e11d48', bg: '#ffe4e6', label: 'Pending Final Confirmation' },
       'APPROVED': { color: '#15803d', bg: '#dcfce3', label: 'Approved' },
       'REJECTED': { color: '#b91c1c', bg: '#fee2e2', label: 'Rejected' }
     };

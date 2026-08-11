@@ -1,6 +1,10 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from function_requirement_system.api.views_core import DepartmentViewSet
+
+router = DefaultRouter()
+router.register(r'departments', DepartmentViewSet, basename='department')
 
 urlpatterns = [
-    path('manage/', views.manage_departments, name='manage_departments'),
+    path('', include(router.urls)),
 ]

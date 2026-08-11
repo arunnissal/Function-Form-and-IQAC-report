@@ -26,7 +26,7 @@ export default function Dashboard() {
             rejected++;
           } else if (req.status !== 'DRAFT') {
             if (user?.role === 'MANAGEMENT' || user?.is_superuser) {
-              if (req.status === 'PENDING_MANAGEMENT') pending++;
+              if (req.status === 'PENDING_MANAGEMENT' || req.status === 'PENDING_FINAL_CONFIRMATION') pending++;
             } else if (user?.role === 'PRINCIPAL') {
               if (req.status === 'PENDING_PRINCIPAL') pending++;
             } else if (user?.role === 'DEAN_COMPUTING') {
@@ -35,9 +35,14 @@ export default function Dashboard() {
               if (req.status === 'PENDING_DEAN' && computingDepts.includes(deptCode)) {
                 pending++;
               }
+            } else if (user?.role === 'HOD') {
+              if (req.status === 'PENDING_HOD') pending++;
             } else {
-              pending++; // Faculty and HOD see all pending requests they have access to
+              // Faculty sees all active workflow requests
+              pending++;
             }
+          } else if (req.status === 'CANCELLED') {
+            rejected++;
           }
         });
 

@@ -5,13 +5,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
-    path('', include('accounts.urls')),
-    path('requests/', include('requests.urls')),
-    path('approvals/', include('approvals.urls')),
-    path('halls/', include('halls.urls')),
-    path('departments/', include('departments.urls')),
-    path('api/v1/', include('function_requirement_system.api.urls')),
+    path('api/v1/', include('accounts.urls')),
+    path('api/v1/', include('requests.urls')),
+    path('api/v1/', include('halls.urls')),
+    path('api/v1/', include('departments.urls')),
+    path('api/v1/', include('approvals.urls')),
 ]
 
 if settings.DEBUG:

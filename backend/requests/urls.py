@@ -1,7 +1,10 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .api_views import FunctionRequestViewSet
+
+router = DefaultRouter()
+router.register(r'requests', FunctionRequestViewSet, basename='request')
 
 urlpatterns = [
-    path('create/', views.create_request, name='create_request'),
-    path('my-requests/', views.my_requests, name='my_requests'),
+    path('', include(router.urls)),
 ]

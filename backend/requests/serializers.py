@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from requests.models import FunctionRequest
 from resources.models import GuestHouseRequirement, RefreshmentRequirement, TransportRequirement, PowerCameraRequirement, MementoRequirement
+from approvals.models import ApprovalLog
 
 class GuestHouseRequirementSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,6 +28,12 @@ class MementoRequirementSerializer(serializers.ModelSerializer):
         model = MementoRequirement
         exclude = ('function_request',)
 
+class ApprovalLogSerializer(serializers.ModelSerializer):
+    approver_name = serializers.CharField(source='approver.get_full_name', read_only=True)
+    class Meta:
+        model = ApprovalLog
+        fields = ['id', 'approver_name', 'stage', 'status', 'remarks', 'timestamp']
+
 class FunctionRequestSerializer(serializers.ModelSerializer):
     faculty_name = serializers.CharField(source='faculty.user.get_full_name', read_only=True)
     department_code = serializers.CharField(source='department.department_code', read_only=True)
@@ -38,6 +45,7 @@ class FunctionRequestSerializer(serializers.ModelSerializer):
     transport = TransportRequirementSerializer()
     power_camera = PowerCameraRequirementSerializer()
     memento = MementoRequirementSerializer()
+    approval_logs = ApprovalLogSerializer(many=True, read_only=True)
 
     class Meta:
         model = FunctionRequest
@@ -74,25 +82,30 @@ class FunctionRequestSerializer(serializers.ModelSerializer):
         return function_request
 
     def update(self, instance, validated_data):
+        # Extract nested data first to avoid mutating dictionary during iteration
+        guest_house_data = validated_data.pop('guest_house', None)
+        refreshment_data = validated_data.pop('refreshment', None)
+        transport_data = validated_data.pop('transport', None)
+        power_camera_data = validated_data.pop('power_camera', None)
+        memento_data = validated_data.pop('memento', None)
+
         # Update main fields
         for attr, value in validated_data.items():
-            if not isinstance(value, dict):
-                setattr(instance, attr, value)
+            setattr(instance, attr, value)
         instance.save()
 
         # Helper to update nested fields
-        def update_nested(nested_name, model_class):
-            if nested_name in validated_data:
-                nested_data = validated_data.pop(nested_name)
+        def update_nested_instance(data, model_class):
+            if data is not None:
                 nested_instance, _ = model_class.objects.get_or_create(function_request=instance)
-                for attr, value in nested_data.items():
+                for attr, value in data.items():
                     setattr(nested_instance, attr, value)
                 nested_instance.save()
 
-        update_nested('guest_house', GuestHouseRequirement)
-        update_nested('refreshment', RefreshmentRequirement)
-        update_nested('transport', TransportRequirement)
-        update_nested('power_camera', PowerCameraRequirement)
-        update_nested('memento', MementoRequirement)
+        update_nested_instance(guest_house_data, GuestHouseRequirement)
+        update_nested_instance(refreshment_data, RefreshmentRequirement)
+        update_nested_instance(transport_data, TransportRequirement)
+        update_nested_instance(power_camera_data, PowerCameraRequirement)
+        update_nested_instance(memento_data, MementoRequirement)
 
         return instance

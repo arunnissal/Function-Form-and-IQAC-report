@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import Stepper from '../components/Stepper';
 
 export default function NewRequest() {
   const navigate = useNavigate();
@@ -79,12 +80,11 @@ export default function NewRequest() {
   };
 
   const triggerConfirmation = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setShowConfirmModal(true);
   };
 
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+  const handleSubmit = async (statusVal = 'PENDING_HOD') => {
     setSubmitError('');
     try {
       const sanitizePayload = (obj) => {
@@ -116,7 +116,8 @@ export default function NewRequest() {
         refreshment: refreshment,
         power_camera: power,
         memento: memento,
-        transport: transport
+        transport: transport,
+        status: statusVal
       });
 
       await api.post('requests/', payload);
@@ -131,34 +132,11 @@ export default function NewRequest() {
     }
   };
 
-  const renderStepIcon = (num, title, icon) => (
-    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: step >= num ? 1 : 0.5}}>
-      <div style={{
-        width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: step === num ? 'var(--primary-color)' : (step > num ? '#10b981' : '#e2e8f0'),
-        color: step >= num ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', marginBottom: '0.5rem'
-      }}>
-        {step > num ? '✓' : num}
-      </div>
-    </div>
-  );
-
   return (
     <Layout title="New Request">
       <div style={{ maxWidth: '900px', margin: '0 auto', background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: 'var(--shadow-md)'}}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
-          <div style={{position: 'absolute', top: '16px', left: '0', right: '0', height: '2px', background: '#e2e8f0', zIndex: 0}}></div>
-          <div style={{zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between'}}>
-            {renderStepIcon(1)}
-            {renderStepIcon(2)}
-            {renderStepIcon(3)}
-            {renderStepIcon(4)}
-            {renderStepIcon(5)}
-            {renderStepIcon(6)}
-            {renderStepIcon(7)}
-          </div>
-        </div>
+        <Stepper step={step} />
 
         {submitError && (
           <div style={{padding: '1rem', background: '#fee2e2', color: '#b91c1c', borderRadius: '4px', marginBottom: '1.5rem'}}>
@@ -512,9 +490,14 @@ export default function NewRequest() {
                 Next Step &rarr;
               </button>
             ) : (
-              <button type="button" onClick={triggerConfirmation} className="btn" style={{background: '#10b981', color: 'white'}}>
-                Confirm & Submit Request
-              </button>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="button" onClick={() => handleSubmit('DRAFT')} className="btn btn-outline" style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
+                  💾 Save as Draft
+                </button>
+                <button type="button" onClick={triggerConfirmation} className="btn" style={{background: '#10b981', color: 'white'}}>
+                  🚀 Confirm & Submit
+                </button>
+              </div>
             )}
           </div>
         </form>
@@ -535,7 +518,7 @@ export default function NewRequest() {
             <p style={{marginBottom: '2rem'}}>Are you absolutely sure you want to proceed with the submission?</p>
             <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem'}}>
               <button onClick={() => setShowConfirmModal(false)} className="btn btn-outline">Go Back</button>
-              <button onClick={handleSubmit} className="btn" style={{background: '#10b981', color: 'white'}}>I Agree, Submit Now</button>
+              <button onClick={() => handleSubmit('PENDING_HOD')} className="btn" style={{background: '#10b981', color: 'white'}}>I Agree, Submit Now</button>
             </div>
           </div>
         </div>

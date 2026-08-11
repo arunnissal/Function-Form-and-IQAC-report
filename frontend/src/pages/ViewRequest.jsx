@@ -3,6 +3,9 @@ import api from '../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { AuthContext } from '../AuthContext';
+import StatusBadge from '../components/StatusBadge';
+import Timeline from '../components/Timeline';
+import ApprovalButtons from '../components/ApprovalButtons';
 
 export default function ViewRequest() {
   const navigate = useNavigate();
@@ -11,8 +14,9 @@ export default function ViewRequest() {
   
   const [requestData, setRequestData] = useState(null);
   const [halls, setHalls] = useState([]);
-  const [remarks, setRemarks] = useState('');
+  const [selectedVenue, setSelectedVenue] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -23,6 +27,9 @@ export default function ViewRequest() {
         ]);
         setRequestData(reqRes.data);
         setHalls(hallsRes.data);
+        if (reqRes.data.venue) {
+          setSelectedVenue(reqRes.data.venue.toString());
+        }
       } catch (err) {
         console.error("Failed to load request data", err);
       } finally {
@@ -32,25 +39,86 @@ export default function ViewRequest() {
     fetchInitialData();
   }, [id]);
 
-  const handleAction = async (action) => {
+  const handleApprove = async (remarks) => {
+    if (status === 'PENDING_MANAGEMENT' && user?.role === 'MANAGEMENT' && !selectedVenue) {
+      alert("Please select a seminar hall to allocate.");
+      return;
+    }
+    setSubmitting(true);
     try {
-      await api.post(`requests/${id}/${action}/`, { remarks });
-      navigate(-1); // Go back to where they came from
+      if (status === 'PENDING_MANAGEMENT' && user?.role === 'MANAGEMENT') {
+        // Provisonally save venue assignment
+        await api.patch(`requests/${id}/`, { venue: selectedVenue });
+      }
+      
+      if (status === 'PENDING_FINAL_CONFIRMATION') {
+        await api.post(`requests/${id}/confirm_booking/`, { remarks });
+      } else {
+        await api.post(`requests/${id}/approve/`, { remarks });
+      }
+      navigate(-1);
     } catch (err) {
-      alert(`Failed to ${action} request.`);
-      console.error(err);
+      alert(err.response?.data?.detail || "Failed to approve request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReject = async (remarks) => {
+    setSubmitting(true);
+    try {
+      await api.post(`requests/${id}/reject/`, { remarks });
+      navigate(-1);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to reject request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReturn = async (remarks) => {
+    setSubmitting(true);
+    try {
+      await api.post(`requests/${id}/return_for_correction/`, { remarks });
+      navigate(-1);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to return request.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleForceCancel = async () => {
     if (window.confirm("EMERGENCY: Are you sure you want to forcefully cancel this event? This cannot be undone.")) {
+      setSubmitting(true);
       try {
         await api.post(`requests/${id}/cancel_request/`, { remarks: 'Cancelled by higher authority' });
         navigate(-1);
       } catch (err) {
         alert("Failed to cancel event.");
         console.error(err);
+      } finally {
+        setSubmitting(false);
       }
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await api.get(`requests/${id}/generate_pdf/`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `function_request_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Failed to download PDF", err);
+      alert("Could not generate PDF. Please try again.");
     }
   };
 
@@ -73,41 +141,30 @@ export default function ViewRequest() {
   const {
     function_name, function_type, start_date, end_date, number_of_days, time_from, time_to, venue,
     number_of_students, class_name, organizer_name, organizer_contact, chief_guest_name, chief_guest_designation,
-    guest_house, refreshment, power_camera, memento, transport, status
+    guest_house, refreshment, power_camera, memento, transport, status, approval_logs
   } = requestData;
-
-  const getStatusBadge = (s) => {
-    const badges = {
-      'DRAFT': { color: '#64748b', bg: '#f1f5f9', label: 'Draft' },
-      'PENDING_HOD': { color: '#d97706', bg: '#fef3c7', label: 'Pending HOD' },
-      'PENDING_DEAN': { color: '#0891b2', bg: '#cffafe', label: 'Pending Dean' },
-      'PENDING_MANAGEMENT': { color: '#2563eb', bg: '#dbeafe', label: 'Pending Management' },
-      'PENDING_PRINCIPAL': { color: '#7c3aed', bg: '#f3e8ff', label: 'Pending Principal' },
-      'APPROVED': { color: '#15803d', bg: '#dcfce3', label: 'Approved' },
-      'REJECTED': { color: '#b91c1c', bg: '#fee2e2', label: 'Rejected' }
-    };
-    const b = badges[s] || badges['DRAFT'];
-    return <span style={{ padding: '0.3rem 0.8rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 'bold', color: b.color, backgroundColor: b.bg }}>{b.label}</span>;
-  };
 
   // Determine if the current user can approve/reject this request
   const canApprove = (
     (user?.role === 'HOD' && status === 'PENDING_HOD') ||
     (user?.role === 'DEAN_COMPUTING' && status === 'PENDING_DEAN') ||
     ((user?.role === 'MANAGEMENT' || user?.is_superuser) && status === 'PENDING_MANAGEMENT') ||
-    (user?.role === 'PRINCIPAL' && status === 'PENDING_PRINCIPAL')
+    (user?.role === 'PRINCIPAL' && status === 'PENDING_PRINCIPAL') ||
+    ((user?.role === 'MANAGEMENT' || user?.is_superuser) && status === 'PENDING_FINAL_CONFIRMATION')
   );
 
-  // Determine if the user can edit this request
+  // Determine if the user can edit this request based on active review stage
   let canEdit = false;
   if (user?.is_superuser) {
     canEdit = true;
-  } else if (status === 'DRAFT' || status === 'REJECTED') {
-    if (['FACULTY', 'HOD'].includes(user?.role)) canEdit = true;
+  } else if (user?.role === 'FACULTY' && (status === 'DRAFT' || status === 'RETURNED_FOR_CORRECTION')) {
+    canEdit = true;
   } else if (user?.role === 'HOD' && status === 'PENDING_HOD') {
     canEdit = true;
-  } else if (['MANAGEMENT', 'PRINCIPAL'].includes(user?.role)) {
-    if (['PENDING_MANAGEMENT', 'PENDING_PRINCIPAL', 'APPROVED'].includes(status)) canEdit = true;
+  } else if (user?.role === 'DEAN_COMPUTING' && status === 'PENDING_DEAN') {
+    canEdit = true;
+  } else if (user?.role === 'MANAGEMENT' && status === 'PENDING_MANAGEMENT') {
+    canEdit = true;
   }
 
   return (
@@ -116,8 +173,47 @@ export default function ViewRequest() {
         
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '1rem'}}>
           <h2 style={{margin: 0, color: 'var(--primary-color)'}}>{function_name}</h2>
-          <div>{getStatusBadge(status)}</div>
+          <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+            <button 
+              onClick={handleDownloadPDF} 
+              className="btn btn-outline" 
+              style={{padding: '0.4rem 0.8rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.25rem'}}
+            >
+              📄 Download PDF
+            </button>
+            <StatusBadge status={status} />
+          </div>
         </div>
+
+        {status === 'RETURNED_FOR_CORRECTION' && (
+          <div style={{
+            padding: '1.25rem',
+            background: '#fffbeb',
+            color: '#b45309',
+            borderRadius: '6px',
+            border: '1px solid #fef3c7',
+            marginBottom: '1.5rem',
+            fontSize: '0.9rem'
+          }}>
+            <h4 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#b45309' }}>
+              ⚠️ Returned for Correction
+            </h4>
+            {(() => {
+              const returnedLog = approval_logs && [...approval_logs].reverse().find(l => l.status === 'RETURNED_FOR_CORRECTION');
+              if (returnedLog) {
+                return (
+                  <div>
+                    <p style={{ margin: '0 0 0.25rem 0' }}><strong>Returned By:</strong> {returnedLog.approver_name} ({returnedLog.stage === 'MANAGEMENT' ? 'Management (AO)' : returnedLog.stage})</p>
+                    <p style={{ margin: '0 0 0.25rem 0' }}><strong>Date & Time:</strong> {new Date(returnedLog.timestamp).toLocaleString()}</p>
+                    <p style={{ margin: '0 0 0.25rem 0' }}><strong>Remarks:</strong> &ldquo;{returnedLog.remarks}&rdquo;</p>
+                    <p style={{ margin: 0 }}><strong>Current Workflow Stage:</strong> Faculty Action (Revisions Needed)</p>
+                  </div>
+                );
+              }
+              return <p style={{ margin: 0 }}>Remarks/Comments: No detailed correction log found.</p>;
+            })()}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
           {/* Basic Details */}
@@ -127,7 +223,7 @@ export default function ViewRequest() {
               <li><strong>Type:</strong> {function_type}</li>
               <li><strong>Dates:</strong> {start_date} to {end_date || start_date} ({number_of_days} days)</li>
               <li><strong>Timing:</strong> {time_from} - {time_to}</li>
-              <li><strong>Venue:</strong> {halls.find(h => h.id.toString() === venue?.toString())?.hall_name || 'None'}</li>
+              <li><strong>Venue:</strong> {halls.find(h => h.id.toString() === venue?.toString())?.hall_name || 'None Assigned'}</li>
               <li><strong>Target Audience:</strong> {number_of_students} Students ({class_name || 'N/A'})</li>
               <li><strong>Organizer:</strong> {organizer_name} ({organizer_contact})</li>
               <li><strong>Chief Guest:</strong> {chief_guest_name} - {chief_guest_designation}</li>
@@ -169,54 +265,45 @@ export default function ViewRequest() {
           </div>
         )}
 
-        {/* Approval / Rejection Action Area */}
+        {/* Approval Decision Section with Hall Allocation for Management */}
         {canApprove && (
-          <div style={{marginTop: '2rem', background: '#f0fdf4', padding: '1.5rem', borderRadius: '8px', border: '1px solid #bbf7d0'}}>
-            <h4 style={{ color: '#166534', margin: '0 0 1rem 0' }}>Approval Action Required</h4>
-            <div style={{marginBottom: '1rem'}}>
-              <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold', color: '#166534'}}>Remarks (Optional)</label>
-              <textarea 
-                className="form-input" 
-                rows="3" 
-                value={remarks} 
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Leave a comment or reason for rejection..."
-                style={{borderColor: '#bbf7d0'}}
-              />
-            </div>
-            <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
-              <button onClick={() => handleAction('approve')} className="btn" style={{background: '#10b981', color: 'white', flex: 1}}>✅ Approve Request</button>
-              <button onClick={() => handleAction('reject')} className="btn btn-outline" style={{borderColor: '#ef4444', color: '#ef4444', flex: 1}}>❌ Reject Request</button>
-            </div>
+          <div>
+            {user?.role === 'MANAGEMENT' && status === 'PENDING_MANAGEMENT' && (
+              <div style={{ background: '#f0fdf4', padding: '1.5rem', borderRadius: '8px', border: '1px solid #bbf7d0', marginBottom: '1.5rem' }}>
+                <h4 style={{ color: '#166534', margin: '0 0 1rem 0' }}>Assign Seminar Hall (Provisional)</h4>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold' }}>Seminar Hall *</label>
+                  <select 
+                    className="form-input" 
+                    value={selectedVenue} 
+                    onChange={(e) => setSelectedVenue(e.target.value)}
+                    required
+                    style={{ background: '#fff' }}
+                  >
+                    <option value="">-- Select Hall --</option>
+                    {halls.map(h => (
+                      <option key={h.id} value={h.id}>{h.hall_name} (Cap: {h.capacity})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <ApprovalButtons 
+              onApprove={handleApprove} 
+              onReject={handleReject} 
+              onReturn={handleReturn} 
+              isSubmitting={submitting} 
+              approveLabel={status === 'PENDING_FINAL_CONFIRMATION' ? '✅ Final Confirm Booking' : '✅ Approve'}
+            />
           </div>
         )}
 
-        {/* Management direct rejection capability at any stage */}
-        {!canApprove && user?.role === 'MANAGEMENT' && ['PENDING_HOD', 'PENDING_DEAN', 'PENDING_PRINCIPAL'].includes(status) && (
-          <div style={{marginTop: '2rem', background: '#fff1f2', padding: '1.5rem', borderRadius: '8px', border: '1px solid #fecdd3'}}>
-            <h4 style={{ color: '#9f1239', margin: '0 0 1rem 0' }}>Administrative Reject Option</h4>
-            <div style={{marginBottom: '1rem'}}>
-              <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold', color: '#9f1239'}}>Rejection Remarks (Required)</label>
-              <textarea 
-                className="form-input" 
-                rows="3" 
-                value={remarks} 
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Please enter the reason for rejection..."
-                style={{borderColor: '#fecdd3'}}
-              />
-            </div>
-            <button onClick={() => {
-              if(!remarks.trim()){
-                alert("Please provide rejection remarks.");
-                return;
-              }
-              handleAction('reject');
-            }} className="btn" style={{background: '#e11d48', color: 'white', width: '100%'}}>
-              ❌ Reject Request
-            </button>
-          </div>
-        )}
+        {/* Vertical Audit Trail Timeline */}
+        <div style={{ marginTop: '3rem', borderTop: '2px solid var(--border-color)', paddingTop: '2rem' }}>
+          <h3 style={{ color: 'var(--primary-color)', marginBottom: '1.5rem' }}>Approval Workflow Timeline</h3>
+          <Timeline logs={approval_logs} />
+        </div>
 
         {/* Footer Actions */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
@@ -225,8 +312,8 @@ export default function ViewRequest() {
           </button>
           
           <div style={{display: 'flex', gap: '1rem'}}>
-            {(['MANAGEMENT', 'PRINCIPAL'].includes(user?.role) || user?.is_superuser) && status !== 'REJECTED' && (
-              <button onClick={handleForceCancel} className="btn btn-outline" style={{borderColor: '#ef4444', color: '#ef4444'}}>
+            {(['MANAGEMENT', 'PRINCIPAL'].includes(user?.role) || user?.is_superuser) && status !== 'REJECTED' && status !== 'CANCELLED' && (
+              <button onClick={handleForceCancel} className="btn btn-outline" style={{borderColor: '#ef4444', color: '#ef4444'}} disabled={submitting}>
                 ⚠️ Force Cancel Event
               </button>
             )}

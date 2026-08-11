@@ -1,15 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import api from '../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
+import Stepper from '../components/Stepper';
+import { AuthContext } from '../AuthContext';
 
 export default function EditRequest() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useContext(AuthContext);
   const [step, setStep] = useState(1);
   const [halls, setHalls] = useState([]);
   const [submitError, setSubmitError] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [requestData, setRequestData] = useState(null);
+  const [adminRemarks, setAdminRemarks] = useState('');
+
+  const canEditField = (fieldName) => {
+    if (!user) return false;
+    if (user.is_superuser) return true;
+    if (user.role === 'FACULTY') return true;
+    
+    if (user.role === 'HOD') {
+      const allowed = [
+        'function_name', 'function_type', 'start_date', 'end_date', 'number_of_days',
+        'time_from', 'time_to', 'type_of_training', 'number_of_students', 'class_name',
+        'organizer_name', 'organizer_contact', 'chief_guest_name', 'chief_guest_designation',
+        'chief_guest_organization'
+      ];
+      return allowed.includes(fieldName);
+    }
+    
+    if (user.role === 'DEAN_COMPUTING') {
+      const allowed = ['function_name', 'function_type', 'type_of_training'];
+      return allowed.includes(fieldName);
+    }
+    
+    if (user.role === 'MANAGEMENT') {
+      const logistics = ['venue', 'guest_house', 'refreshment', 'power_camera', 'memento', 'transport'];
+      return logistics.includes(fieldName);
+    }
+    
+    return false;
+  };
   
   // Step 1: Basic Function Details
   const [basic, setBasic] = useState({
@@ -66,6 +99,7 @@ export default function EditRequest() {
         try {
           const res = await api.get(`requests/${id}/`);
           const data = res.data;
+          setRequestData(data);
           
           setBasic({
             function_name: data.function_name || '', function_type: data.function_type || '', start_date: data.start_date || '', end_date: data.end_date || '',
@@ -74,11 +108,21 @@ export default function EditRequest() {
             chief_guest_name: data.chief_guest_name || '', chief_guest_designation: data.chief_guest_designation || '', chief_guest_organization: data.chief_guest_organization || ''
           });
 
-          if (data.guest_house) setGuest(data.guest_house);
-          if (data.refreshment) setRefreshment(data.refreshment);
-          if (data.power_camera) setPower(data.power_camera);
-          if (data.memento) setMemento(data.memento);
-          if (data.transport) setTransport(data.transport);
+          const fallbackEmptyStrings = (obj) => {
+            const res = { ...obj };
+            for (const key in res) {
+              if (res[key] === null) {
+                res[key] = '';
+              }
+            }
+            return res;
+          };
+
+          if (data.guest_house) setGuest(fallbackEmptyStrings(data.guest_house));
+          if (data.refreshment) setRefreshment(fallbackEmptyStrings(data.refreshment));
+          if (data.power_camera) setPower(fallbackEmptyStrings(data.power_camera));
+          if (data.memento) setMemento(fallbackEmptyStrings(data.memento));
+          if (data.transport) setTransport(fallbackEmptyStrings(data.transport));
           
         } catch (err) {
           console.error("Failed to fetch request", err);
@@ -106,12 +150,15 @@ export default function EditRequest() {
   };
 
   const triggerConfirmation = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setShowConfirmModal(true);
   };
 
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+  const handleSubmit = async (resubmitVal = false) => {
+    if (user?.role !== 'FACULTY' && !adminRemarks.trim()) {
+      alert("Please provide a reason/remark for this modification.");
+      return;
+    }
     setSubmitError('');
     try {
       const sanitizePayload = (obj) => {
@@ -143,11 +190,17 @@ export default function EditRequest() {
         refreshment: refreshment,
         power_camera: power,
         memento: memento,
-        transport: transport
+        transport: transport,
+        resubmit: resubmitVal,
+        remarks: adminRemarks
       });
 
       await api.put(`requests/${id}/`, payload);
-      navigate('/approvals');
+      if (user?.role === 'FACULTY') {
+        navigate('/my-requests');
+      } else {
+        navigate('/approvals');
+      }
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data) {
@@ -158,34 +211,30 @@ export default function EditRequest() {
     }
   };
 
-  const renderStepIcon = (num, title, icon) => (
-    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: step >= num ? 1 : 0.5}}>
-      <div style={{
-        width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: step === num ? 'var(--primary-color)' : (step > num ? '#10b981' : '#e2e8f0'),
-        color: step >= num ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', marginBottom: '0.5rem'
-      }}>
-        {step > num ? '✓' : num}
-      </div>
-    </div>
-  );
-
   return (
     <Layout title={`Edit Request #${id}`}>
       <div style={{ maxWidth: '900px', margin: '0 auto', background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: 'var(--shadow-md)'}}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
-          <div style={{position: 'absolute', top: '16px', left: '0', right: '0', height: '2px', background: '#e2e8f0', zIndex: 0}}></div>
-          <div style={{zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between'}}>
-            {renderStepIcon(1)}
-            {renderStepIcon(2)}
-            {renderStepIcon(3)}
-            {renderStepIcon(4)}
-            {renderStepIcon(5)}
-            {renderStepIcon(6)}
-            {renderStepIcon(7)}
+        <Stepper step={step} />
+
+        {requestData?.status === 'RETURNED_FOR_CORRECTION' && (
+          <div style={{
+            padding: '1.25rem',
+            background: '#fffbeb',
+            color: '#b45309',
+            borderRadius: '6px',
+            border: '1px solid #fef3c7',
+            marginBottom: '1.5rem',
+            fontSize: '0.9rem'
+          }}>
+            <strong>⚠️ Returned for Correction:</strong> Please address the requested revisions below.
+            {requestData.approval_logs && requestData.approval_logs.length > 0 && (
+              <div style={{ marginTop: '0.5rem', fontStyle: 'italic', color: '#78350f' }}>
+                Comments: &ldquo;{requestData.approval_logs[requestData.approval_logs.length - 1].remarks}&rdquo;
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {submitError && (
           <div style={{padding: '1rem', background: '#fee2e2', color: '#b91c1c', borderRadius: '4px', marginBottom: '1.5rem'}}>
@@ -201,35 +250,35 @@ export default function EditRequest() {
               <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
                 <div>
                   <label className="form-label">Name of the Function *</label>
-                  <input type="text" className="form-input" required value={basic.function_name} onChange={e => setBasic({...basic, function_name: e.target.value})} />
+                  <input type="text" className="form-input" required value={basic.function_name} onChange={e => setBasic({...basic, function_name: e.target.value})} disabled={!canEditField('function_name')} />
                 </div>
                 <div>
                   <label className="form-label">Type of Function *</label>
-                  <input type="text" className="form-input" required value={basic.function_type} onChange={e => setBasic({...basic, function_type: e.target.value})} />
+                  <input type="text" className="form-input" required value={basic.function_type} onChange={e => setBasic({...basic, function_type: e.target.value})} disabled={!canEditField('function_type')} />
                 </div>
                 <div>
                   <label className="form-label">Start Date *</label>
-                  <input type="date" className="form-input" required value={basic.start_date} onChange={e => setBasic({...basic, start_date: e.target.value})} />
+                  <input type="date" className="form-input" required value={basic.start_date} onChange={e => setBasic({...basic, start_date: e.target.value})} disabled={!canEditField('start_date')} />
                 </div>
                 <div>
                   <label className="form-label">End Date</label>
-                  <input type="date" className="form-input" value={basic.end_date} onChange={e => setBasic({...basic, end_date: e.target.value})} />
+                  <input type="date" className="form-input" value={basic.end_date} onChange={e => setBasic({...basic, end_date: e.target.value})} disabled={!canEditField('end_date')} />
                 </div>
                 <div>
                   <label className="form-label">Time From *</label>
-                  <input type="time" className="form-input" required value={basic.time_from} onChange={e => setBasic({...basic, time_from: e.target.value})} />
+                  <input type="time" className="form-input" required value={basic.time_from} onChange={e => setBasic({...basic, time_from: e.target.value})} disabled={!canEditField('time_from')} />
                 </div>
                 <div>
                   <label className="form-label">Time To *</label>
-                  <input type="time" className="form-input" required value={basic.time_to} onChange={e => setBasic({...basic, time_to: e.target.value})} />
+                  <input type="time" className="form-input" required value={basic.time_to} onChange={e => setBasic({...basic, time_to: e.target.value})} disabled={!canEditField('time_to')} />
                 </div>
                 <div>
                   <label className="form-label">No. of Days *</label>
-                  <input type="number" className="form-input" required min="1" value={basic.number_of_days} onChange={e => setBasic({...basic, number_of_days: e.target.value})} />
+                  <input type="number" className="form-input" required min="1" value={basic.number_of_days} onChange={e => setBasic({...basic, number_of_days: e.target.value})} disabled={!canEditField('number_of_days')} />
                 </div>
                 <div>
                   <label className="form-label">Venue *</label>
-                  <select className="form-input" required value={basic.venue} onChange={e => setBasic({...basic, venue: e.target.value})}>
+                  <select className="form-input" required value={basic.venue} onChange={e => setBasic({...basic, venue: e.target.value})} disabled={!canEditField('venue')}>
                     <option value="">Select Venue...</option>
                     {halls.map(h => <option key={h.id} value={h.id}>{h.hall_name} (Capacity: {h.capacity})</option>)}
                   </select>
@@ -237,13 +286,13 @@ export default function EditRequest() {
                 <div>
                   <label className="form-label">No. of Students / Class</label>
                   <div style={{display: 'flex', gap: '0.5rem'}}>
-                    <input type="number" className="form-input" placeholder="Count" value={basic.number_of_students} onChange={e => setBasic({...basic, number_of_students: e.target.value})} />
-                    <input type="text" className="form-input" placeholder="Class Name" value={basic.class_name} onChange={e => setBasic({...basic, class_name: e.target.value})} />
+                    <input type="number" className="form-input" placeholder="Count" value={basic.number_of_students} onChange={e => setBasic({...basic, number_of_students: e.target.value})} disabled={!canEditField('number_of_students')} />
+                    <input type="text" className="form-input" placeholder="Class Name" value={basic.class_name} onChange={e => setBasic({...basic, class_name: e.target.value})} disabled={!canEditField('class_name')} />
                   </div>
                 </div>
                 <div>
                   <label className="form-label">Type of Training</label>
-                  <input type="text" className="form-input" value={basic.type_of_training} onChange={e => setBasic({...basic, type_of_training: e.target.value})} />
+                  <input type="text" className="form-input" value={basic.type_of_training} onChange={e => setBasic({...basic, type_of_training: e.target.value})} disabled={!canEditField('type_of_training')} />
                 </div>
               </div>
 
@@ -251,30 +300,30 @@ export default function EditRequest() {
               <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
                 <div>
                   <label className="form-label">Organizer Name *</label>
-                  <input type="text" className="form-input" required value={basic.organizer_name} onChange={e => setBasic({...basic, organizer_name: e.target.value})} />
+                  <input type="text" className="form-input" required value={basic.organizer_name} onChange={e => setBasic({...basic, organizer_name: e.target.value})} disabled={!canEditField('organizer_name')} />
                 </div>
                 <div>
                   <label className="form-label">Organizer Contact Number *</label>
-                  <input type="text" className="form-input" required value={basic.organizer_contact} onChange={e => setBasic({...basic, organizer_contact: e.target.value})} />
+                  <input type="text" className="form-input" required value={basic.organizer_contact} onChange={e => setBasic({...basic, organizer_contact: e.target.value})} disabled={!canEditField('organizer_contact')} />
                 </div>
                 <div>
                   <label className="form-label">Chief Guest Name</label>
-                  <input type="text" className="form-input" value={basic.chief_guest_name} onChange={e => setBasic({...basic, chief_guest_name: e.target.value})} />
+                  <input type="text" className="form-input" value={basic.chief_guest_name} onChange={e => setBasic({...basic, chief_guest_name: e.target.value})} disabled={!canEditField('chief_guest_name')} />
                 </div>
                 <div>
                   <label className="form-label">Designation</label>
-                  <input type="text" className="form-input" value={basic.chief_guest_designation} onChange={e => setBasic({...basic, chief_guest_designation: e.target.value})} />
+                  <input type="text" className="form-input" value={basic.chief_guest_designation} onChange={e => setBasic({...basic, chief_guest_designation: e.target.value})} disabled={!canEditField('chief_guest_designation')} />
                 </div>
                 <div style={{gridColumn: '1 / -1'}}>
                   <label className="form-label">College / Industry</label>
-                  <input type="text" className="form-input" value={basic.chief_guest_organization} onChange={e => setBasic({...basic, chief_guest_organization: e.target.value})} />
+                  <input type="text" className="form-input" value={basic.chief_guest_organization} onChange={e => setBasic({...basic, chief_guest_organization: e.target.value})} disabled={!canEditField('chief_guest_organization')} />
                 </div>
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div>
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={!canEditField('guest_house')}>
               <h3 style={{color: 'var(--primary-color)', marginBottom: '1.5rem'}}>2. Guest House Requirement</h3>
               <div style={{marginBottom: '1.5rem'}}>
                 <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold'}}>
@@ -298,11 +347,11 @@ export default function EditRequest() {
                   </div>
                 </div>
               )}
-            </div>
+            </fieldset>
           )}
 
           {step === 3 && (
-            <div>
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={!canEditField('refreshment')}>
               <h3 style={{color: 'var(--primary-color)', marginBottom: '1.5rem'}}>3. Refreshment / Lunch Requirement</h3>
               <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem'}}>
                 <div>
@@ -342,18 +391,18 @@ export default function EditRequest() {
                   <input type="number" className="form-input" value={refreshment.non_veg_lunch_count} onChange={e => setRefreshment({...refreshment, non_veg_lunch_count: e.target.value})} />
                 </div>
               </div>
-            </div>
+            </fieldset>
           )}
 
           {step === 4 && (
-            <div>
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={!canEditField('power_camera')}>
               <h3 style={{color: 'var(--primary-color)', marginBottom: '1.5rem'}}>4. Power / System / Camera Requirement</h3>
               <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center'}}>
-                  <label style={{fontWeight: 'bold'}}><input type="checkbox" checked={power.mic_required} onChange={e => setPower({...power, mic_required: e.target.checked})} /> Mic Arrangement Required?</label>
+                   <label style={{fontWeight: 'bold'}}><input type="checkbox" checked={power.mic_required} onChange={e => setPower({...power, mic_required: e.target.checked})} /> Mic Arrangement Required?</label>
                   {power.mic_required && (
                     <div style={{display: 'flex', gap: '0.5rem'}}>
-                      <input type="text" className="form-input" placeholder="Type" value={power.mic_type} onChange={e => setPower({...power, mic_type: e.target.value})} />
+                       <input type="text" className="form-input" placeholder="Type" value={power.mic_type} onChange={e => setPower({...power, mic_type: e.target.value})} />
                       <input type="number" className="form-input" style={{width: '80px'}} value={power.number_of_mics} onChange={e => setPower({...power, number_of_mics: e.target.value})} />
                     </div>
                   )}
@@ -363,7 +412,7 @@ export default function EditRequest() {
                   <label style={{fontWeight: 'bold'}}><input type="checkbox" checked={power.projector_required} onChange={e => setPower({...power, projector_required: e.target.checked})} /> LCD Projector</label>
                   <label style={{fontWeight: 'bold'}}><input type="checkbox" checked={power.laptop_required} onChange={e => setPower({...power, laptop_required: e.target.checked})} /> Laptop</label>
                 </div>
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center'}}>
+                <div style={{gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center'}}>
                   <label style={{fontWeight: 'bold'}}><input type="checkbox" checked={power.photographer_required} onChange={e => setPower({...power, photographer_required: e.target.checked})} /> Photograph Facility Required?</label>
                   {power.photographer_required && (
                     <div>
@@ -375,11 +424,11 @@ export default function EditRequest() {
                   )}
                 </div>
               </div>
-            </div>
+            </fieldset>
           )}
 
           {step === 5 && (
-            <div>
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={!canEditField('memento')}>
               <h3 style={{color: 'var(--primary-color)', marginBottom: '1.5rem'}}>5. Memento / Seating / Reception</h3>
               <div style={{marginBottom: '1.5rem'}}>
                 <label style={{fontWeight: 'bold'}}><input type="checkbox" checked={memento.required} onChange={e => setMemento({...memento, required: e.target.checked})} /> Memento / Honorarium for Chief Guest?</label>
@@ -422,11 +471,11 @@ export default function EditRequest() {
                   placeholder="e.g., Flower Bouquet (3), Shawls (3), Welcome Kit (3), Name Plates (8), Drinking Water Bottles (300), Podium Decoration, Stage Floral Decoration"
                 ></textarea>
               </div>
-            </div>
+            </fieldset>
           )}
 
           {step === 6 && (
-            <div>
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={!canEditField('transport')}>
               <h3 style={{color: 'var(--primary-color)', marginBottom: '1.5rem'}}>6. Transport Requirement</h3>
               <div style={{marginBottom: '1.5rem'}}>
                 <label style={{fontWeight: 'bold'}}><input type="checkbox" checked={transport.required} onChange={e => setTransport({...transport, required: e.target.checked})} /> Transport Required?</label>
@@ -478,7 +527,7 @@ export default function EditRequest() {
                   </div>
                 </div>
               )}
-            </div>
+            </fieldset>
           )}
 
           {step === 7 && (
@@ -525,6 +574,23 @@ export default function EditRequest() {
                     <p style={{fontSize: '0.875rem', margin: 0}}><strong>Seating:</strong> Dias ({memento.dias_seats}), Audience ({memento.audience_seats}), Table Cloths ({memento.table_cloths})</p>
                   </div>
                 )}
+                {user?.role !== 'FACULTY' && (
+                  <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fef3c7', textAlign: 'left' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#b45309' }}>Administrative Audit Remarks</h4>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold' }}>
+                      Reason for Modification *
+                    </label>
+                    <textarea
+                      className="form-input"
+                      rows="3"
+                      value={adminRemarks}
+                      onChange={(e) => setAdminRemarks(e.target.value)}
+                      placeholder="Please document the reason for modifying the request requirements..."
+                      style={{ background: '#fff', width: '100%', borderColor: '#fef3c7' }}
+                      required
+                    />
+                  </div>
+                )}
               </div>
 
             </div>
@@ -540,9 +606,28 @@ export default function EditRequest() {
                 Next Step &rarr;
               </button>
             ) : (
-              <button type="button" onClick={triggerConfirmation} className="btn" style={{background: '#10b981', color: 'white'}}>
-                Save Updated Request
-              </button>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                {user?.role === 'FACULTY' ? (
+                  <>
+                    <button type="button" onClick={() => handleSubmit(false)} className="btn btn-outline" style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
+                      💾 Save Draft
+                    </button>
+                    {requestData?.status === 'RETURNED_FOR_CORRECTION' ? (
+                      <button type="button" onClick={() => handleSubmit(true)} className="btn" style={{ background: '#f59e0b', color: 'white' }}>
+                        🚀 Resubmit Request
+                      </button>
+                    ) : (
+                      <button type="button" onClick={triggerConfirmation} className="btn" style={{ background: '#10b981', color: 'white' }}>
+                        🚀 Confirm & Submit
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <button type="button" onClick={() => handleSubmit(false)} className="btn" style={{ background: '#10b981', color: 'white' }}>
+                    💾 Save Modifications
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </form>
@@ -562,7 +647,7 @@ export default function EditRequest() {
             <p style={{marginBottom: '2rem'}}>Are you absolutely sure you want to save these changes?</p>
             <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem'}}>
               <button onClick={() => setShowConfirmModal(false)} className="btn btn-outline">Go Back</button>
-              <button onClick={handleSubmit} className="btn" style={{background: '#10b981', color: 'white'}}>I Agree, Save Updates</button>
+              <button onClick={() => handleSubmit(true)} className="btn" style={{background: '#10b981', color: 'white'}}>I Agree, Save & Submit</button>
             </div>
           </div>
         </div>
