@@ -20,3 +20,4 @@ six
 sqlparse
 tzdata
 whitenoise
+reportlab
