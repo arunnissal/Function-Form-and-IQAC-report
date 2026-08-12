@@ -47,7 +47,7 @@ class Command(BaseCommand):
         MementoRequirement.objects.all().delete()
         FunctionRequest.objects.all().delete()
 
-        User.objects.exclude(username__in=['admin', 'principal', 'management', 'ao@drngpit.ac.in', 'principal@drngpit.ac.in']).delete()
+        User.objects.exclude(username__in=['admin', 'principal', 'management', 'ao@drngpit.ac.in', 'principal@drngpit.ac.in', 'dean@drngpit.ac.in']).delete()
         Department.objects.all().delete()
         HOD.objects.all().delete()
         Faculty.objects.all().delete()
