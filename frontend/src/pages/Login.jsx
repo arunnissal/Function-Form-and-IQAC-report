@@ -20,12 +20,15 @@ export default function Login() {
       return;
     }
 
+    setSubmitting(true);
     try {
       const user = await login(email, password);
       // Optional: Add strict role checking here if required matching `position`
       navigate('/dashboard');
     } catch (err) {
       setError('Invalid Mail id or password.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -113,8 +116,29 @@ export default function Login() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{width: '100%', padding: '0.875rem'}}>
-            Sign In
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            style={{
+              width: '100%', 
+              padding: '0.875rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '0.5rem',
+              opacity: submitting ? 0.8 : 1,
+              cursor: submitting ? 'not-allowed' : 'pointer'
+            }}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <span className="spinner"></span>
+                Signing In...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
       </div>
