@@ -7,7 +7,42 @@
     <title>Dr. NGPIT - Function Booking System</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;
+        height: 100vh;
+        background-color: #f8fafc;
+        font-family: system-ui, -apple-system, sans-serif;
+        box-sizing: border-box;
+      ">
+        <div style="
+          width: 48px;
+          height: 48px;
+          border: 4px solid rgba(13, 35, 64, 0.1);
+          border-top-color: #0d2340;
+          border-radius: 50%;
+          animation: page-spin 1s linear infinite;
+        "></div>
+        <p style="
+          margin-top: 1rem;
+          color: #0d2340;
+          font-weight: 600;
+          font-size: 1.1rem;
+          letter-spacing: -0.01em;
+          margin-bottom: 0;
+        ">Loading Dr. NGPIT ERP...</p>
+        <style>
+          @keyframes page-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
