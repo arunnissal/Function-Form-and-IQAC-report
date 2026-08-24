@@ -3,7 +3,7 @@ services:
     name: function-system-backend
     env: python
     buildCommand: "./backend/build.sh"
-    startCommand: "cd backend && gunicorn function_requirement_system.wsgi:application"
+    startCommand: "./backend/start.sh"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
