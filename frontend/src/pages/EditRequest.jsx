@@ -25,6 +25,7 @@ export default function EditRequest() {
       const allowed = [
         'function_name', 'function_type', 'start_date', 'end_date', 'number_of_days',
         'time_from', 'time_to', 'type_of_training', 'number_of_students', 'class_name',
+        'student_transport_required', 'student_transport_details',
         'organizer_name', 'organizer_contact', 'chief_guest_name', 'chief_guest_designation',
         'chief_guest_organization'
       ];
@@ -49,7 +50,8 @@ export default function EditRequest() {
     function_name: '', function_type: '', start_date: '', end_date: '',
     number_of_days: 1, time_from: '', time_to: '', venue: '', type_of_training: '',
     number_of_students: 0, class_name: '', organizer_name: '', organizer_contact: '',
-    chief_guest_name: '', chief_guest_designation: '', chief_guest_organization: ''
+    chief_guest_name: '', chief_guest_designation: '', chief_guest_organization: '',
+    student_transport_required: false, student_transport_details: ''
   });
 
   // Step 2: Guest House
@@ -61,7 +63,9 @@ export default function EditRequest() {
   const [refreshment, setRefreshment] = useState({
     tea_required: false, coffee_required: false, snacks_required: false,
     required_time: '', payment_through: 'ASSOCIATION', tiffin_count: 0,
-    normal_lunch_count: 0, veg_lunch_count: 0, non_veg_lunch_count: 0
+    normal_lunch_count: 0, veg_lunch_count: 0, non_veg_lunch_count: 0,
+    student_tea_required: false, student_coffee_required: false, student_snacks_required: false,
+    student_required_time: '', lunch_required_time: ''
   });
 
   // Step 4: Power/System
@@ -105,7 +109,9 @@ export default function EditRequest() {
             function_name: data.function_name || '', function_type: data.function_type || '', start_date: data.start_date || '', end_date: data.end_date || '',
             number_of_days: data.number_of_days || 1, time_from: data.time_from || '', time_to: data.time_to || '', venue: data.venue || '', type_of_training: data.type_of_training || '',
             number_of_students: data.number_of_students || 0, class_name: data.class_name || '', organizer_name: data.organizer_name || '', organizer_contact: data.organizer_contact || '',
-            chief_guest_name: data.chief_guest_name || '', chief_guest_designation: data.chief_guest_designation || '', chief_guest_organization: data.chief_guest_organization || ''
+            chief_guest_name: data.chief_guest_name || '', chief_guest_designation: data.chief_guest_designation || '', chief_guest_organization: data.chief_guest_organization || '',
+            student_transport_required: data.student_transport_required || false,
+            student_transport_details: data.student_transport_details || ''
           });
 
           const fallbackEmptyStrings = (obj) => {
@@ -165,6 +171,7 @@ export default function EditRequest() {
         const sanitized = {};
         const charFields = [
           'function_name', 'function_type', 'type_of_training', 'class_name',
+          'student_transport_details',
           'organizer_name', 'organizer_contact', 'chief_guest_name', 'chief_guest_designation', 'chief_guest_organization',
           'pickup_location', 'drop_location', 'pickup_person_name', 'pickup_person_contact',
           'honorarium_worth', 'reception_items', 'mic_type', 'photographer_type', 'payment_through', 'room_type'
@@ -294,6 +301,18 @@ export default function EditRequest() {
                   <label className="form-label">Type of Training</label>
                   <input type="text" className="form-input" value={basic.type_of_training} onChange={e => setBasic({...basic, type_of_training: e.target.value})} disabled={!canEditField('type_of_training')} />
                 </div>
+                <div style={{gridColumn: '1 / -1', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '0.5rem'}}>
+                  <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', marginBottom: '0.5rem', cursor: 'pointer'}}>
+                    <input type="checkbox" checked={basic.student_transport_required} onChange={e => setBasic({...basic, student_transport_required: e.target.checked})} disabled={!canEditField('student_transport_required')} />
+                    Student Transport Required?
+                  </label>
+                  {basic.student_transport_required && (
+                    <div>
+                      <label className="form-label">If Yes, Name of the Stage & No. of Students</label>
+                      <input type="text" className="form-input" placeholder="e.g. Coimbatore Junction (40), Sitra (50)" value={basic.student_transport_details} onChange={e => setBasic({...basic, student_transport_details: e.target.value})} disabled={!canEditField('student_transport_details')} />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <h4 style={{marginTop: '2rem', marginBottom: '1rem'}}>Organizer & Guest Details</h4>
@@ -353,25 +372,47 @@ export default function EditRequest() {
           {step === 3 && (
             <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={!canEditField('refreshment')}>
               <h3 style={{color: 'var(--primary-color)', marginBottom: '1.5rem'}}>3. Refreshment / Lunch Requirement</h3>
-              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem'}}>
-                <div>
-                  <label className="form-label">Refreshment Items</label>
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-                    <label><input type="checkbox" checked={refreshment.tea_required} onChange={e => setRefreshment({...refreshment, tea_required: e.target.checked})} /> Tea</label>
-                    <label><input type="checkbox" checked={refreshment.coffee_required} onChange={e => setRefreshment({...refreshment, coffee_required: e.target.checked})} /> Coffee</label>
-                    <label><input type="checkbox" checked={refreshment.snacks_required} onChange={e => setRefreshment({...refreshment, snacks_required: e.target.checked})} /> Snacks</label>
+              
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem'}}>
+                {/* Guest Refreshment */}
+                <div style={{background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                  <h4 style={{margin: '0 0 1rem 0', color: 'var(--primary-color)'}}>Guest Refreshment</h4>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem'}}>
+                    <label style={{cursor: 'pointer'}}><input type="checkbox" checked={refreshment.tea_required} onChange={e => setRefreshment({...refreshment, tea_required: e.target.checked})} /> Tea</label>
+                    <label style={{cursor: 'pointer'}}><input type="checkbox" checked={refreshment.coffee_required} onChange={e => setRefreshment({...refreshment, coffee_required: e.target.checked})} /> Coffee</label>
+                    <label style={{cursor: 'pointer'}}><input type="checkbox" checked={refreshment.snacks_required} onChange={e => setRefreshment({...refreshment, snacks_required: e.target.checked})} /> Snacks</label>
                   </div>
-                </div>
-                <div>
                   <label className="form-label">Required Time</label>
                   <input type="time" className="form-input" value={refreshment.required_time} onChange={e => setRefreshment({...refreshment, required_time: e.target.value})} />
-                  <label className="form-label" style={{marginTop: '1rem'}}>Payment Through</label>
+                </div>
+
+                {/* Student Refreshment */}
+                <div style={{background: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                  <h4 style={{margin: '0 0 1rem 0', color: 'var(--primary-color)'}}>Student Refreshment</h4>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem'}}>
+                    <label style={{cursor: 'pointer'}}><input type="checkbox" checked={refreshment.student_tea_required} onChange={e => setRefreshment({...refreshment, student_tea_required: e.target.checked})} /> Tea</label>
+                    <label style={{cursor: 'pointer'}}><input type="checkbox" checked={refreshment.student_coffee_required} onChange={e => setRefreshment({...refreshment, student_coffee_required: e.target.checked})} /> Coffee</label>
+                    <label style={{cursor: 'pointer'}}><input type="checkbox" checked={refreshment.student_snacks_required} onChange={e => setRefreshment({...refreshment, student_snacks_required: e.target.checked})} /> Snacks</label>
+                  </div>
+                  <label className="form-label">Required Time</label>
+                  <input type="time" className="form-input" value={refreshment.student_required_time} onChange={e => setRefreshment({...refreshment, student_required_time: e.target.value})} />
+                </div>
+              </div>
+
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem'}}>
+                <div>
+                  <label className="form-label">Payment Through</label>
                   <select className="form-input" value={refreshment.payment_through} onChange={e => setRefreshment({...refreshment, payment_through: e.target.value})}>
                     <option value="ASSOCIATION">Association Account</option>
                     <option value="INSTITUTION">Institution Account</option>
                   </select>
                 </div>
+                <div>
+                  <label className="form-label">Lunch Delivery Required Time</label>
+                  <input type="time" className="form-input" value={refreshment.lunch_required_time} onChange={e => setRefreshment({...refreshment, lunch_required_time: e.target.value})} />
+                </div>
               </div>
+
               <h4 style={{marginTop: '2rem', marginBottom: '1rem'}}>Exact Numbers</h4>
               <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem'}}>
                 <div>

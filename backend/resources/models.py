@@ -13,11 +13,16 @@ class RefreshmentRequirement(models.Model):
     tea_required = models.BooleanField(default=False)
     coffee_required = models.BooleanField(default=False)
     snacks_required = models.BooleanField(default=False)
+    student_tea_required = models.BooleanField(default=False)
+    student_coffee_required = models.BooleanField(default=False)
+    student_snacks_required = models.BooleanField(default=False)
     normal_lunch_count = models.IntegerField(default=0)
     veg_lunch_count = models.IntegerField(default=0)
     non_veg_lunch_count = models.IntegerField(default=0)
     tiffin_count = models.IntegerField(default=0)
     required_time = models.TimeField(null=True, blank=True)
+    student_required_time = models.TimeField(null=True, blank=True)
+    lunch_required_time = models.TimeField(null=True, blank=True)
     payment_through = models.CharField(max_length=50, choices=(('ASSOCIATION', 'Association Account'), ('INSTITUTION', 'Institution Account')), blank=True)
 
 class TransportRequirement(models.Model):

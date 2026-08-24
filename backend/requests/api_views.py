@@ -18,6 +18,7 @@ def check_unauthorized_edits(user_role, existing_data, incoming_data):
     academic_main = {
         'function_name', 'function_type', 'start_date', 'end_date', 'number_of_days',
         'time_from', 'time_to', 'type_of_training', 'number_of_students', 'class_name',
+        'student_transport_required', 'student_transport_details',
         'organizer_name', 'organizer_contact', 'chief_guest_name', 'chief_guest_designation',
         'chief_guest_organization'
     }

@@ -33,6 +33,8 @@ class FunctionRequest(models.Model):
     type_of_training = models.CharField(max_length=100, blank=True)
     number_of_students = models.IntegerField(default=0)
     class_name = models.CharField(max_length=100, blank=True)
+    student_transport_required = models.BooleanField(default=False)
+    student_transport_details = models.TextField(blank=True)
     
     organizer_name = models.CharField(max_length=100)
     organizer_contact = models.CharField(max_length=20, blank=True)

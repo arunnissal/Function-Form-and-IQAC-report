@@ -190,8 +190,8 @@ def generate_function_request_pdf(req):
         [Paragraph("4. Venue", label_style), Paragraph(venue_val, value_style)],
         [Paragraph("5. Type of Training", label_style), Paragraph(req.type_of_training or '', value_style)],
         [Paragraph("    No. of Students", label_style), students_class_table],
-        [Paragraph("    Transport Required for Students : Yes / No", label_style), Paragraph("", value_style)],
-        [Paragraph("    If Yes, Name of the Stage & No. of Students", label_style), Paragraph("", value_style)],
+        [Paragraph("    Transport Required for Students : Yes / No", label_style), Paragraph("Yes [x]  No [ ]" if req.student_transport_required else "Yes [ ]  No [x]", value_style)],
+        [Paragraph("    If Yes, Name of the Stage & No. of Students", label_style), Paragraph(req.student_transport_details or '', value_style)],
         [Paragraph("6. Name of the Chief Guest", label_style), Paragraph(req.chief_guest_name or '', value_style)],
         [Paragraph("    Designation", label_style), designation_college_table],
         [Paragraph("7. Name and Contact Number of the Organizer", label_style), Paragraph(f"{req.organizer_name or ''} {f'({req.organizer_contact})' if req.organizer_contact else ''}", value_style)]
@@ -290,6 +290,16 @@ def generate_function_request_pdf(req):
     ref_guest_str = f"Tea: {tea_chk}       Coffee: {coffee_chk}       Snacks: {snacks_chk}"
     ref_time = ref.required_time.strftime('%I:%M %p') if (ref and ref.required_time) else ''
     
+    # Student refreshments
+    std_tea_chk = "[x]" if (ref and ref.student_tea_required) else "[ ]"
+    std_coffee_chk = "[x]" if (ref and ref.student_coffee_required) else "[ ]"
+    std_snacks_chk = "[x]" if (ref and ref.student_snacks_required) else "[ ]"
+    ref_std_str = f"Tea: {std_tea_chk}       Coffee: {std_coffee_chk}       Snacks: {std_snacks_chk}"
+    std_ref_time = ref.student_required_time.strftime('%I:%M %p') if (ref and ref.student_required_time) else ''
+    
+    # Lunch service time
+    lunch_time = ref.lunch_required_time.strftime('%I:%M %p') if (ref and ref.lunch_required_time) else ''
+    
     pmt_str = "Association Account [ ] / Institution Account [ ]"
     if ref and ref.payment_through:
         if ref.payment_through == 'ASSOCIATION':
@@ -340,12 +350,12 @@ def generate_function_request_pdf(req):
     ref_data = [
         [Paragraph("Refreshment for Guest", label_style), Paragraph(ref_guest_str, value_style)],
         [Paragraph("Required Time", label_style), Paragraph(ref_time, value_style)],
-        [Paragraph("Refreshment for Students", label_style), Paragraph("Tea: [ ]       Coffee: [ ]       Snacks: [ ]", value_style)],
-        [Paragraph("Required Time", label_style), Paragraph("", value_style)],
+        [Paragraph("Refreshment for Students", label_style), Paragraph(ref_std_str, value_style)],
+        [Paragraph("Required Time", label_style), Paragraph(std_ref_time, value_style)],
         [Paragraph("Payment Through", label_style), Paragraph(pmt_str, value_style)],
         [Paragraph("Mention the Exact Nos.", label_style), nos_table],
         [Paragraph("Special Lunch (Veg)", label_style), veg_nonveg_table],
-        [Paragraph("Required Time", label_style), Paragraph("", value_style)]
+        [Paragraph("Required Time", label_style), Paragraph(lunch_time, value_style)]
     ]
     
     ref_table = Table(ref_data, colWidths=[220, 303])

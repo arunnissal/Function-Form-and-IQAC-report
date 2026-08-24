@@ -141,6 +141,7 @@ export default function ViewRequest() {
   const {
     function_name, function_type, start_date, end_date, number_of_days, time_from, time_to, venue,
     number_of_students, class_name, organizer_name, organizer_contact, chief_guest_name, chief_guest_designation,
+    student_transport_required, student_transport_details,
     guest_house, refreshment, power_camera, memento, transport, status, approval_logs
   } = requestData;
 
@@ -225,8 +226,9 @@ export default function ViewRequest() {
               <li><strong>Timing:</strong> {time_from} - {time_to}</li>
               <li><strong>Venue:</strong> {halls.find(h => h.id.toString() === venue?.toString())?.hall_name || 'None Assigned'}</li>
               <li><strong>Target Audience:</strong> {number_of_students} Students ({class_name || 'N/A'})</li>
+              {student_transport_required && <li><strong>Student Transport:</strong> Required ({student_transport_details || 'No details provided'})</li>}
               <li><strong>Organizer:</strong> {organizer_name} ({organizer_contact})</li>
-              <li><strong>Chief Guest:</strong> {chief_guest_name} - {chief_guest_designation}</li>
+              <li><strong>Chief Guest:</strong> {chief_guest_name} - {chief_guest_designation} ({chief_guest_organization || 'N/A'})</li>
             </ul>
           </div>
 
@@ -234,20 +236,33 @@ export default function ViewRequest() {
           <div>
             <h4 style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Resource Requirements</h4>
             <ul style={{ listStyleType: 'none', padding: 0, margin: 0, fontSize: '0.9rem', lineHeight: '1.8' }}>
-              {guest_house?.required && <li><strong>Guest House:</strong> {guest_house.room_type} Room</li>}
-              {(refreshment?.tea_required || refreshment?.coffee_required) && 
-                <li><strong>Refreshments:</strong> VIP: {refreshment.vip_count}, Staff: {refreshment.staff_count}, Students: {refreshment.student_count}</li>
+              {guest_house?.required && <li><strong>Guest House:</strong> {guest_house.number_of_persons} persons ({guest_house.room_type || 'Standard'}) from {guest_house.from_date} to {guest_house.to_date}</li>}
+              
+              {(refreshment?.tea_required || refreshment?.coffee_required || refreshment?.snacks_required || refreshment?.student_tea_required || refreshment?.student_coffee_required || refreshment?.student_snacks_required) && 
+                <li>
+                  <strong>Refreshments:</strong>
+                  { (refreshment.tea_required || refreshment.coffee_required || refreshment.snacks_required) && ` Guest: ${[refreshment.tea_required && 'Tea', refreshment.coffee_required && 'Coffee', refreshment.snacks_required && 'Snacks'].filter(Boolean).join('/')} @ ${refreshment.required_time || 'N/A'}` }
+                  { (refreshment.student_tea_required || refreshment.student_coffee_required || refreshment.student_snacks_required) && ` | Student: ${[refreshment.student_tea_required && 'Tea', refreshment.student_coffee_required && 'Coffee', refreshment.student_snacks_required && 'Snacks'].filter(Boolean).join('/')} @ ${refreshment.student_required_time || 'N/A'}` }
+                </li>
               }
+              
+              {(refreshment?.tiffin_count > 0 || refreshment?.normal_lunch_count > 0 || refreshment?.veg_lunch_count > 0 || refreshment?.non_veg_lunch_count > 0) &&
+                <li>
+                  <strong>Meals:</strong> Tiffin ({refreshment.tiffin_count}), Normal Lunch ({refreshment.normal_lunch_count}), Veg ({refreshment.veg_lunch_count}), Non-Veg ({refreshment.non_veg_lunch_count}) 
+                  {refreshment.lunch_required_time && ` @ ${refreshment.lunch_required_time}`} (Payment: {refreshment.payment_through})
+                </li>
+              }
+              
               {power_camera?.mic_required && 
-                <li><strong>Audio/Visual:</strong> Mics (Cord: {power_camera.cordless_mics}, Collar: {power_camera.collar_mics}), A/C: {power_camera.ac_required ? 'Yes' : 'No'}</li>
+                <li><strong>Audio/Visual:</strong> Mic: {power_camera.mic_type} (Qty: {power_camera.number_of_mics}), A/C: {power_camera.ac_required ? 'Yes' : 'No'}, Projector: {power_camera.projector_required ? 'Yes' : 'No'}, Laptop: {power_camera.laptop_required ? 'Yes' : 'No'}</li>
               }
               {memento?.required && 
                 <li><strong>Memento:</strong> {memento.quantity} items (Rs. {memento.honorarium_worth})</li>
               }
               {transport?.required && 
-                <li><strong>Transport:</strong> Pickup: {transport.pickup_location} @ {transport.pickup_time}</li>
+                <li><strong>Guest Transport:</strong> Pickup: {transport.pickup_location} @ {transport.pickup_time} | Contact: {transport.pickup_person_name} ({transport.pickup_person_contact})</li>
               }
-              {!guest_house?.required && !refreshment?.tea_required && !power_camera?.mic_required && !memento?.required && !transport?.required && (
+              {!guest_house?.required && !refreshment?.tea_required && !refreshment?.student_tea_required && !power_camera?.mic_required && !memento?.required && !transport?.required && (
                 <li style={{color: 'var(--text-secondary)'}}>No additional resources required.</li>
               )}
             </ul>
