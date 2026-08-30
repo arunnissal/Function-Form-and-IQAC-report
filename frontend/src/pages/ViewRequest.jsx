@@ -260,7 +260,7 @@ export default function ViewRequest() {
                 <li><strong>Memento:</strong> {memento.quantity} items (Rs. {memento.honorarium_worth})</li>
               }
               {transport?.required && 
-                <li><strong>Guest Transport:</strong> Pickup: {transport.pickup_location} @ {transport.pickup_time} | Contact: {transport.pickup_person_name} ({transport.pickup_person_contact})</li>
+                <li><strong>Guest Transport:</strong> Pickup: {transport.pickup_location} @ {transport.pickup_time} | Contact Person (Driver No): {transport.pickup_person_name} ({transport.pickup_person_contact})</li>
               }
               {!guest_house?.required && !refreshment?.tea_required && !refreshment?.student_tea_required && !power_camera?.mic_required && !memento?.required && !transport?.required && (
                 <li style={{color: 'var(--text-secondary)'}}>No additional resources required.</li>
