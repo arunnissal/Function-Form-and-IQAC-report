@@ -140,7 +140,7 @@ export default function ViewRequest() {
 
   const {
     function_name, function_type, start_date, end_date, number_of_days, time_from, time_to, venue,
-    number_of_students, class_name, organizer_name, organizer_contact, chief_guest_name, chief_guest_designation,
+    number_of_students, class_name, organizer_name, organizer_contact, chief_guest_name, chief_guest_designation, chief_guest_organization,
     student_transport_required, student_transport_details,
     guest_house, refreshment, power_camera, memento, transport, status, approval_logs
   } = requestData;

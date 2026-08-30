@@ -34,24 +34,7 @@ class Command(BaseCommand):
         dean.set_password('password123')
         dean.save()
 
-        # Clean database to remove others and prevent duplicate conflicts
-        from requests.models import FunctionRequest
-        from approvals.models import ApprovalLog
-        from resources.models import GuestHouseRequirement, RefreshmentRequirement, TransportRequirement, PowerCameraRequirement, MementoRequirement
-        
-        ApprovalLog.objects.all().delete()
-        GuestHouseRequirement.objects.all().delete()
-        RefreshmentRequirement.objects.all().delete()
-        TransportRequirement.objects.all().delete()
-        PowerCameraRequirement.objects.all().delete()
-        MementoRequirement.objects.all().delete()
-        FunctionRequest.objects.all().delete()
-
-        User.objects.exclude(username__in=['admin', 'principal', 'management', 'ao@drngpit.ac.in', 'principal@drngpit.ac.in', 'dean@drngpit.ac.in']).delete()
-        Department.objects.all().delete()
-        HOD.objects.all().delete()
-        Faculty.objects.all().delete()
-        SeminarHall.objects.all().delete()
+        # Data seeding will use get_or_create to avoid conflicts. Deletion is disabled to prevent loss of user data on server restart.
 
         # Seminar Halls
         halls = [
