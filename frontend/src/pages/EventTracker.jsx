@@ -52,7 +52,7 @@ const EventTracker = () => {
     if (selectedDept && req.department_name !== selectedDept && req.department !== parseInt(selectedDept)) return false;
     if (selectedHall && req.venue?.toString() !== selectedHall.toString()) return false;
     if (selectedStatus) {
-      if (selectedStatus === 'COMPLETED' && req.status !== 'CONFIRMED') return false;
+      if (selectedStatus === 'COMPLETED' && (req.status !== 'CONFIRMED' && req.status !== 'APPROVED')) return false;
       if (selectedStatus === 'PENDING' && !req.status.startsWith('PENDING')) return false;
       if (selectedStatus === 'RETURNED' && req.status !== 'RETURNED_FOR_CORRECTION') return false;
     }
@@ -100,7 +100,7 @@ const EventTracker = () => {
 
   // Status color helper for calendar items
   const getEventBadgeStyle = (status) => {
-    if (status === 'CONFIRMED') return { bg: '#dcfce7', text: '#15803d', border: '#bbf7d0' };
+    if (status === 'CONFIRMED' || status === 'APPROVED') return { bg: '#dcfce7', text: '#15803d', border: '#bbf7d0' };
     if (status.startsWith('PENDING')) return { bg: '#fef3c7', text: '#b45309', border: '#fde68a' };
     if (status === 'RETURNED_FOR_CORRECTION') return { bg: '#e0e7ff', text: '#4338ca', border: '#c7d2fe' };
     if (status === 'REJECTED' || status === 'CANCELLED') return { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca' };
@@ -108,13 +108,14 @@ const EventTracker = () => {
   };
 
   const getFlowProgress = (status) => {
+    const isFullyApproved = status === 'APPROVED' || status === 'CONFIRMED';
     const stages = [
       { key: 'FACULTY', label: 'Faculty Created', done: true },
-      { key: 'PENDING_HOD', label: 'HOD Approval', done: ['PENDING_DEAN', 'PENDING_MANAGEMENT', 'PENDING_PRINCIPAL', 'PENDING_FINAL_CONFIRMATION', 'CONFIRMED'].includes(status) },
-      { key: 'PENDING_DEAN', label: 'Dean Computing', done: ['PENDING_MANAGEMENT', 'PENDING_PRINCIPAL', 'PENDING_FINAL_CONFIRMATION', 'CONFIRMED'].includes(status) },
-      { key: 'PENDING_MANAGEMENT', label: 'AO Hall Assign', done: ['PENDING_PRINCIPAL', 'PENDING_FINAL_CONFIRMATION', 'CONFIRMED'].includes(status) },
-      { key: 'PENDING_PRINCIPAL', label: 'Principal Sanction', done: ['PENDING_FINAL_CONFIRMATION', 'CONFIRMED'].includes(status) },
-      { key: 'CONFIRMED', label: 'Final Confirmation', done: status === 'CONFIRMED' }
+      { key: 'PENDING_HOD', label: 'HOD Approval', done: isFullyApproved || ['PENDING_DEAN', 'PENDING_MANAGEMENT', 'PENDING_PRINCIPAL', 'PENDING_FINAL_CONFIRMATION'].includes(status) },
+      { key: 'PENDING_DEAN', label: 'Dean Computing', done: isFullyApproved || ['PENDING_MANAGEMENT', 'PENDING_PRINCIPAL', 'PENDING_FINAL_CONFIRMATION'].includes(status) },
+      { key: 'PENDING_MANAGEMENT', label: 'AO Hall Assign', done: isFullyApproved || ['PENDING_PRINCIPAL', 'PENDING_FINAL_CONFIRMATION'].includes(status) },
+      { key: 'PENDING_PRINCIPAL', label: 'Principal Sanction', done: isFullyApproved || ['PENDING_FINAL_CONFIRMATION'].includes(status) },
+      { key: 'CONFIRMED', label: 'Final Confirmation', done: isFullyApproved }
     ];
     return stages;
   };
