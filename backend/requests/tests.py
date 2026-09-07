@@ -824,3 +824,41 @@ class ApprovalsWorkflowTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
+    def test_dynamic_hall_availability_and_clash_detection(self):
+        hall = SeminarHall.objects.create(hall_name="Main Auditorium", capacity=500, location="A Block")
+        # Create an active booking for Main Auditorium on 2026-09-15 from 10:00 to 12:00
+        FunctionRequest.objects.create(
+            faculty=self.fac_cse,
+            department=self.cse_dept,
+            venue=hall,
+            function_name="AI Conference",
+            function_type="Conference",
+            start_date="2026-09-15",
+            end_date="2026-09-15",
+            time_from="10:00:00",
+            time_to="12:00:00",
+            status="PENDING_HOD"
+        )
+
+        fac_token = str(RefreshToken.for_user(self.fac_cse_user).access_token)
+
+        # 1. Overlapping query (10:30 - 11:30) -> Should be unavailable
+        url_overlap = "/api/v1/halls/available/?start_date=2026-09-15&time_from=10:30&time_to=11:30"
+        res_overlap = self.client.get(url_overlap, HTTP_AUTHORIZATION=f"Bearer {fac_token}")
+        self.assertEqual(res_overlap.status_code, 200)
+        halls_data = res_overlap.json()
+        target_hall = next(h for h in halls_data if h['id'] == hall.id)
+        self.assertFalse(target_hall['is_available'])
+        self.assertIsNotNone(target_hall['conflict_details'])
+        self.assertEqual(target_hall['conflict_details']['function_name'], "AI Conference")
+
+        # 2. Non-overlapping query on SAME DAY (14:00 - 16:00) -> Should be available!
+        url_clear = "/api/v1/halls/available/?start_date=2026-09-15&time_from=14:00&time_to=16:00"
+        res_clear = self.client.get(url_clear, HTTP_AUTHORIZATION=f"Bearer {fac_token}")
+        self.assertEqual(res_clear.status_code, 200)
+        halls_data_clear = res_clear.json()
+        target_hall_clear = next(h for h in halls_data_clear if h['id'] == hall.id)
+        self.assertTrue(target_hall_clear['is_available'])
+        self.assertIsNone(target_hall_clear['conflict_details'])
+
+

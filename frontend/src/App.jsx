@@ -7,6 +7,7 @@ import NewRequest from './pages/NewRequest';
 import MyRequests from './pages/MyRequests';
 import ApprovalQueue from './pages/ApprovalQueue';
 import EventCalendar from './pages/EventCalendar';
+import EventTracker from './pages/EventTracker';
 import ManageHalls from './pages/ManageHalls';
 import ManageDepartments from './pages/ManageDepartments';
 import ManageStaff from './pages/ManageStaff';
@@ -65,7 +66,7 @@ export default function App() {
           } />
           <Route path="/calendar" element={
             <ProtectedRoute>
-              <EventCalendar />
+              <EventTracker />
             </ProtectedRoute>
           } />
           <Route path="/manage-halls" element={

@@ -53,17 +53,44 @@ export default function NewRequest() {
     drop_date: '', drop_time: '', drop_location: '', pickup_person_name: '', pickup_person_contact: ''
   });
 
+  const [fetchingHalls, setFetchingHalls] = useState(false);
+
   useEffect(() => {
-    const fetchHalls = async () => {
+    const checkAvailability = async () => {
+      setFetchingHalls(true);
       try {
-        const response = await api.get('halls/');
-        setHalls(response.data);
+        if (basic.start_date && basic.time_from && basic.time_to) {
+          const response = await api.get('halls/available/', {
+            params: {
+              start_date: basic.start_date,
+              end_date: basic.end_date || basic.start_date,
+              time_from: basic.time_from,
+              time_to: basic.time_to
+            }
+          });
+          setHalls(response.data);
+
+          // If currently selected venue is now unavailable, clear selection
+          if (basic.venue) {
+            const selected = response.data.find(h => h.id.toString() === basic.venue.toString());
+            if (selected && selected.is_available === false) {
+              setBasic(prev => ({ ...prev, venue: '' }));
+              setSubmitError(`The selected hall "${selected.hall_name}" is already booked for the chosen time slot.`);
+            }
+          }
+        } else {
+          const response = await api.get('halls/');
+          setHalls(response.data.map(h => ({ ...h, is_available: true })));
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to check hall availability", err);
+      } finally {
+        setFetchingHalls(false);
       }
     };
-    fetchHalls();
-  }, []);
+
+    checkAvailability();
+  }, [basic.start_date, basic.end_date, basic.time_from, basic.time_to]);
 
   const handleNext = (e) => {
     e.preventDefault();
@@ -183,10 +210,28 @@ export default function NewRequest() {
                   <input type="number" className="form-input" required min="1" value={basic.number_of_days} onChange={e => setBasic({...basic, number_of_days: e.target.value})} />
                 </div>
                 <div>
-                  <label className="form-label">Venue *</label>
+                  <label className="form-label">
+                    Venue * {fetchingHalls && <span style={{fontSize: '0.8rem', color: 'var(--primary-color)', marginLeft: '0.5rem'}}>(Checking slot availability...)</span>}
+                  </label>
                   <select className="form-input" required value={basic.venue} onChange={e => setBasic({...basic, venue: e.target.value})}>
                     <option value="">Select Venue...</option>
-                    {halls.map(h => <option key={h.id} value={h.id}>{h.hall_name} (Capacity: {h.capacity})</option>)}
+                    {halls.map(h => {
+                      const isOccupied = h.is_available === false;
+                      const conflict = h.conflict_details;
+                      const label = isOccupied 
+                        ? `${h.hall_name} ❌ [Booked: ${conflict?.function_name || 'Occupied'} (${conflict?.time_from?.slice(0,5)} - ${conflict?.time_to?.slice(0,5)})]`
+                        : `${h.hall_name} (Capacity: ${h.capacity}) ✅`;
+                      return (
+                        <option 
+                          key={h.id} 
+                          value={h.id} 
+                          disabled={isOccupied}
+                          style={isOccupied ? { color: '#94a3b8', backgroundColor: '#f1f5f9' } : { color: '#0f172a' }}
+                        >
+                          {label}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div>

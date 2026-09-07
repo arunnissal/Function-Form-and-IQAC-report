@@ -27,7 +27,7 @@ export default function Sidebar({ isOpen }) {
           </Link>
         )}
         
-        <Link to="/calendar" className={`sidebar-link ${isActive('/calendar')}`}>Event Calendar</Link>
+        <Link to="/calendar" className={`sidebar-link ${isActive('/calendar')}`}>Calendar & Event Flow</Link>
 
         {['HOD', 'DEAN_COMPUTING', 'MANAGEMENT', 'PRINCIPAL'].includes(user?.role) && (
           <Link to="/approvals" className={`sidebar-link ${isActive('/approvals')}`}>Approvals</Link>
